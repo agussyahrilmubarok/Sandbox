@@ -1,0 +1,16 @@
+{
+    "folders": [
+        {
+            "name": "main",
+            "path": "main-service",
+        },
+        {
+            "name": "provider",
+            "path": "provider-service",
+        },
+        {
+            "name": "root",
+            "path": "."
+        }
+    ]
+}

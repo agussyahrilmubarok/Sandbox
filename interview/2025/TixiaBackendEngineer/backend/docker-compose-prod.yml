@@ -1,0 +1,37 @@
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: on-failure
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    networks:
+      - flightnet
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: redis-insight
+    restart: unless-stopped
+    ports:
+      - "5000:5540"
+    networks:
+      - flightnet
+    depends_on:
+      - redis
+    
+  provider-service:
+    build:
+      context: ./provider-service
+      dockerfile: Dockerfile
+    container_name: provider-service
+    restart: on-failure
+    command: ["./provider-service", "--serviceLevel=production"]
+    depends_on:
+      - redis
+    networks:
+      - flightnet
+
+networks:
+  flightnet:
+    driver: bridge
