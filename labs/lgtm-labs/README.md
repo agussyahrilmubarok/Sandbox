@@ -1,1 +1,0 @@
-# Loki Grafana Tempo Mimir
