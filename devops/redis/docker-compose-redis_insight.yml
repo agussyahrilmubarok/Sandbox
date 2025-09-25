@@ -1,0 +1,12 @@
+services:
+  redis-insight:
+    image: redis/redisinsight:2.70
+    container_name: redis-insight
+    restart: on-failure
+    ports:
+      - "5540:5540"
+    volumes:
+      - redis_insight_data:/db
+
+volumes:
+  redis_insight_data:
