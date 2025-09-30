@@ -1,0 +1,21 @@
+services:
+  mongo:
+    image: mongo:8.0.14
+    container_name: mongo
+    restart: on-failure
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: sandbox
+      MONGO_INITDB_ROOT_PASSWORD: sandboxpass
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - sandbox_net
+  
+volumes:
+  mongo_data:
+
+networks:
+  sandbox_net:
+    driver: bridge
