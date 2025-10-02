@@ -1,0 +1,22 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.1.4-management
+    container_name: rabbitmq
+    restart: on-failure
+    environment:
+      RABBITMQ_DEFAULT_USER: sandbox
+      RABBITMQ_DEFAULT_PASS: sandboxpass
+    ports:
+      - "5672:5672"   # amqp port
+      - "15672:15672" # web ui port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks: 
+      - sandbox_net
+
+volumes:
+  rabbitmq_data:
+
+networks: 
+  sandbox_net: 
+    driver: bridge
