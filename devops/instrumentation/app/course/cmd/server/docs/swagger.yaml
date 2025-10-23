@@ -1,0 +1,74 @@
+basePath: /api/v1
+definitions:
+  course.Course:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      seat_available:
+        type: integer
+      start_date:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8082
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: This is the Course Service API.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://example.com/terms/
+  title: Course Service API
+  version: "1.0"
+paths:
+  /courses/clean-dummy:
+    delete:
+      description: Delete all dummy course data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Remove all dummy courses
+      tags:
+      - Dummy
+  /courses/init-dummy:
+    post:
+      description: Create dummy data for testing
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/course.Course'
+            type: array
+      summary: Initialize dummy course data
+      tags:
+      - Dummy
+swagger: "2.0"
