@@ -90,14 +90,14 @@ const docTemplate = `{
         },
         "/courses/find": {
             "get": {
-                "description": "Retrieves course data by code",
+                "description": "Retrieves course data by query param",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Courses"
                 ],
-                "summary": "Get course by Code",
+                "summary": "Get course by query param",
                 "parameters": [
                     {
                         "type": "string",

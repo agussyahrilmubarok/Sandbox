@@ -90,14 +90,14 @@ const docTemplate = `{
         },
         "/members/find": {
             "get": {
-                "description": "Retrieves member data by code",
+                "description": "Retrieves member data by query param",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Members"
                 ],
-                "summary": "Get member by Code",
+                "summary": "Get member by query param",
                 "parameters": [
                     {
                         "type": "string",
@@ -161,6 +161,15 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/member.Member"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     }

@@ -12,9 +12,14 @@ import (
 
 	"example.com/member/internal/member"
 	"example.com/member/pkg/config"
+	"example.com/member/pkg/discovery"
+	"example.com/member/pkg/discovery/consul"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	_ "example.com/member/cmd/server/docs"
-	httpSwagger "github.com/swaggo/http-swagger"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 // @title Member Service API
@@ -58,77 +63,68 @@ func main() {
 		os.Exit(1)
 	}
 
+	instanceID := discovery.GenerateInstanceID(cfg.App.Name)
+	consulRegistry, err := consul.NewRegistry(cfg.Consul.Address)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to register consul discovery")
+		os.Exit(1)
+	}
+
+	ctx := context.Background()
+	if err := consulRegistry.Register(ctx, instanceID, cfg.App.Name, fmt.Sprintf("%v:%d", cfg.App.Host, cfg.App.Port)); err != nil {
+		logger.Fatal().Err(err).Msg("Failed to register consul discovery")
+		os.Exit(1)
+	}
+
+	go func() {
+		for {
+			if err := consulRegistry.ReportHealthyState(instanceID, cfg.App.Name); err != nil {
+				logger.Info().Msg("Failed to report healthy state: " + err.Error())
+			}
+			time.Sleep(1 * time.Second)
+		}
+	}()
+	defer consulRegistry.Deregister(ctx, instanceID, cfg.App.Name)
+
 	store := member.NewStore(db, logger)
 	service := member.NewService(store, logger)
 	handler := member.NewHandler(service, logger)
 
-	mux := http.NewServeMux()
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	mux.HandleFunc("/api/v1/members", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			handler.FindAll(w, r)
-		default:
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		}
+	api := e.Group("/api/v1/members")
+
+	api.GET("", handler.FindAll)
+	api.GET("/find", handler.Find)
+	api.POST("/init-dummy", handler.InitDummy)
+	api.DELETE("/clean-dummy", handler.CleanDummy)
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+	e.GET("/healthz", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"status":  "ok",
+			"service": "member-service",
+		})
 	})
-
-	mux.HandleFunc("/api/v1/members/find", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			handler.FindByCode(w, r)
-			return
-		}
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-	})
-
-	mux.HandleFunc("/api/v1/members/init-dummy", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			handler.InitDummy(w, r)
-			return
-		}
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-	})
-
-	mux.HandleFunc("/api/v1/members/clean-dummy", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodDelete {
-			handler.CleanDummy(w, r)
-			return
-		}
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-	})
-
-	mux.Handle("/swagger/", httpSwagger.WrapHandler)
-
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"status":"ok","service":"member-service"}`)
-	})
-
-	addr := fmt.Sprintf(":%d", cfg.App.Port)
-	srv := &http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}
 
 	go func() {
-		logger.Info().Msgf("Server running at http://%s%s", cfg.App.Host, addr)
-		logger.Info().Msgf("Swagger available at http://%s%s/swagger/index.html", cfg.App.Host, addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logger.Info().Msgf("Server running at http://%s:%d", cfg.App.Host, cfg.App.Port)
+		logger.Info().Msgf("Swagger available at http://%s:%d/swagger/index.html", cfg.App.Host, cfg.App.Port)
+		if err := e.Start(fmt.Sprintf(":%d", cfg.App.Port)); err != nil && err != http.ErrServerClosed {
 			logger.Fatal().Err(err).Msg("Failed to start server")
 		}
 	}()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
 	<-stop
 	logger.Info().Msg("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctxShutdown, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := e.Shutdown(ctxShutdown); err != nil {
 		logger.Fatal().Err(err).Msg("Graceful shutdown failed")
 	}
 

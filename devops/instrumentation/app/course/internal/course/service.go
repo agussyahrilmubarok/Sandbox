@@ -51,7 +51,7 @@ func (s *service) FindByID(ctx context.Context, courseID string) (*Course, error
 
 	if course == nil {
 		s.log.Warn().Str("course_id", courseID).Msg("Course not found")
-		return nil, nil
+		return nil, errors.New("course not found")
 	}
 
 	s.log.Info().Str("course_id", courseID).Msg("Successfully found course by ID")
@@ -67,7 +67,7 @@ func (s *service) FindByCode(ctx context.Context, courseCode string) (*Course, e
 
 	if course == nil {
 		s.log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return nil, nil
+		return nil, errors.New("course not found")
 	}
 
 	s.log.Info().Str("course_code", courseCode).Msg("Successfully found course by code")
@@ -105,7 +105,7 @@ func (s *service) ReserveByCode(ctx context.Context, courseCode string) error {
 
 	if course == nil {
 		s.log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return nil
+		return errors.New("course not found")
 	}
 
 	currentTime := time.Now()
@@ -140,7 +140,7 @@ func (s *service) ReleaseByCode(ctx context.Context, courseCode string) error {
 
 	if course == nil {
 		s.log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return nil
+		return errors.New("course not found")
 	}
 
 	currentTime := time.Now()

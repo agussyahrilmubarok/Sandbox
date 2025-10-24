@@ -10,21 +10,21 @@ import (
 	"syscall"
 	"time"
 
-	"example.com/course/internal/course"
-	"example.com/course/pkg/config"
-	"example.com/course/pkg/discovery"
-	"example.com/course/pkg/discovery/consul"
+	"example.com/booking/internal/booking"
+	"example.com/booking/pkg/config"
+	"example.com/booking/pkg/discovery"
+	"example.com/booking/pkg/discovery/consul"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	_ "example.com/course/cmd/server/docs"
+	_ "example.com/booking/cmd/server/docs"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
-// @title Course Service API
+// @title Booking Service API
 // @version 1.0
-// @description This is the Course Service API.
+// @description This is the Booking Service API.
 // @termsOfService http://example.com/terms/
 
 // @contact.name API Support
@@ -34,8 +34,7 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host localhost:8082
-// @BasePath /api/v1
+// @host localhost:8080
 func main() {
 	configFlag := flag.String("config", "configs/config.json", "Path to config file")
 	flag.Parse()
@@ -58,7 +57,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := db.AutoMigrate(&course.Course{}); err != nil {
+	if err := db.AutoMigrate(&booking.Booking{}); err != nil {
 		logger.Fatal().Err(err).Msg("AutoMigrate failed")
 		os.Exit(1)
 	}
@@ -86,27 +85,28 @@ func main() {
 	}()
 	defer consulRegistry.Deregister(ctx, instanceID, cfg.App.Name)
 
-	store := course.NewStore(db, logger)
-	service := course.NewService(store, logger)
-	handler := course.NewHandler(service, logger)
+	store := booking.NewStore(db, logger)
+	client := booking.NewClient(consulRegistry, logger)
+	service := booking.NewService(store, client, logger)
+	handler := booking.NewHandler(service, logger)
 
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	api := e.Group("/api/v1/courses")
-	api.GET("", handler.FindAll)
-	api.GET("/find", handler.Find)
-	api.POST("/reserve", handler.ReserveCourse)
-	api.POST("/release", handler.ReleaseCourse)
-	api.POST("/init-dummy", handler.InitDummy)
-	api.DELETE("/clean-dummy", handler.CleanDummy)
+	// v1 routes
+	apiV1 := e.Group("/api/v1")
+	apiV1.POST("/booking/course", handler.Booking)
+
+	// v2 routes
+	apiV2 := e.Group("/api/v2")
+	apiV2.POST("/booking/course", handler.BookingV2)
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/healthz", func(c echo.Context) error {
 		return c.JSON(200, map[string]string{
 			"status":  "ok",
-			"service": "course-service",
+			"service": "booking-service",
 		})
 	})
 

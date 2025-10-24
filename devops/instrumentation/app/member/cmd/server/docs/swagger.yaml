@@ -73,7 +73,7 @@ paths:
       - Dummy
   /members/find:
     get:
-      description: Retrieves member data by code
+      description: Retrieves member data by query param
       parameters:
       - description: Member Code
         in: query
@@ -105,7 +105,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get member by Code
+      summary: Get member by query param
       tags:
       - Members
   /members/init-dummy:
@@ -120,6 +120,12 @@ paths:
             items:
               $ref: '#/definitions/member.Member'
             type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       summary: Initialize dummy member data
       tags:
       - Dummy

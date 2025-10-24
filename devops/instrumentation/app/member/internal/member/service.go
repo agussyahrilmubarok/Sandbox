@@ -2,6 +2,7 @@ package member
 
 import (
 	"context"
+	"errors"
 
 	"github.com/rs/zerolog"
 )
@@ -48,7 +49,7 @@ func (s *service) FindByID(ctx context.Context, memberID string) (*Member, error
 
 	if member == nil {
 		s.log.Warn().Str("member_id", memberID).Msg("Member not found")
-		return nil, nil
+		return nil, errors.New("member not found")
 	}
 
 	s.log.Info().Str("member_id", member.ID).Msg("Successfully fetched member by ID")
@@ -64,7 +65,7 @@ func (s *service) FindByCode(ctx context.Context, memberCode string) (*Member, e
 
 	if member == nil {
 		s.log.Warn().Str("member_code", memberCode).Msg("Member not found")
-		return nil, nil
+		return nil, errors.New("member not found")
 	}
 
 	s.log.Info().Str("member_code", member.ID).Msg("Successfully fetched member by Code")
@@ -80,7 +81,7 @@ func (s *service) FindByEmail(ctx context.Context, memberEmail string) (*Member,
 
 	if member == nil {
 		s.log.Warn().Str("member_email", memberEmail).Msg("Member not found")
-		return nil, nil
+		return nil, errors.New("member not found")
 	}
 
 	s.log.Info().Str("member_email", member.ID).Msg("Successfully fetched member by Email")

@@ -1,12 +1,11 @@
 package course
 
 import (
-	"context"
-	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 )
 
@@ -30,24 +29,22 @@ func NewHandler(service IService, log zerolog.Logger) *Handler {
 // @Success 200 {array} Course
 // @Failure 500 {object} map[string]string
 // @Router /courses [get]
-func (h *Handler) FindAll(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+func (h *Handler) FindAll(c echo.Context) error {
+	ctx := c.Request().Context()
 
 	courses, err := h.service.FindAll(ctx)
 	if err != nil {
 		h.log.Error().Err(err).Msg("Failed to fetch courses")
-		http.Error(w, "Failed to fetch courses", http.StatusInternalServerError)
-		return
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch courses"})
 	}
 
 	h.log.Info().Int("courses_count", len(courses)).Msg("Fetched all courses successfully")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(courses)
+	return c.JSON(http.StatusOK, courses)
 }
 
-// FindByCode godoc
-// @Summary Get course by Code
-// @Description Retrieves course data by code
+// Find godoc
+// @Summary Get course by query param
+// @Description Retrieves course data by query param
 // @Tags Courses
 // @Produce json
 // @Param code query string true "Course Code"
@@ -56,29 +53,21 @@ func (h *Handler) FindAll(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /courses/find [get]
-func (h *Handler) FindByCode(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	courseCode := r.URL.Query().Get("code")
+func (h *Handler) Find(c echo.Context) error {
+	ctx := c.Request().Context()
+	courseCode := c.QueryParam("code")
 	if courseCode == "" {
-		http.Error(w, "Missing code parameter", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Missing code parameter"})
 	}
 
 	course, err := h.service.FindByCode(ctx, courseCode)
 	if err != nil {
 		h.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to fetch course")
-		http.Error(w, "Failed to fetch course", http.StatusInternalServerError)
-		return
-	}
-
-	if course == nil {
-		http.Error(w, "Course not found", http.StatusNotFound)
-		return
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch course"})
 	}
 
 	h.log.Info().Str("course_code", courseCode).Msg("Fetched course successfully")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(course)
+	return c.JSON(http.StatusOK, course)
 }
 
 // ReserveCourse godoc
@@ -92,34 +81,22 @@ func (h *Handler) FindByCode(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /courses/reserve [post]
-func (h *Handler) ReserveCourse(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
+func (h *Handler) ReserveCourse(c echo.Context) error {
+	ctx := c.Request().Context()
 
 	var payload CourseCodeRequest
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	if err := c.Bind(&payload); err != nil {
 		h.log.Error().Err(err).Msg("Failed to decode request body")
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request payload"})
 	}
 
-	err := h.service.ReserveByCode(ctx, payload.Code)
-	if err != nil {
+	if err := h.service.ReserveByCode(ctx, payload.Code); err != nil {
 		h.log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to reserve course")
-		switch err.Error() {
-		case "course has already ended":
-			http.Error(w, "Course has already ended", http.StatusBadRequest)
-		case "no available seats to reserve":
-			http.Error(w, "No available seats", http.StatusBadRequest)
-		default:
-			http.Error(w, "Failed to reserve course", http.StatusInternalServerError)
-		}
-		return
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to reserve course"})
 	}
 
 	h.log.Info().Str("course_code", payload.Code).Msg("Course seat reserved successfully")
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Seat reserved successfully"})
+	return c.JSON(http.StatusOK, echo.Map{"message": "Seat reserved successfully"})
 }
 
 // ReleaseCourse godoc
@@ -133,32 +110,23 @@ func (h *Handler) ReserveCourse(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /courses/release [post]
-func (h *Handler) ReleaseCourse(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
+func (h *Handler) ReleaseCourse(c echo.Context) error {
+	ctx := c.Request().Context()
 
 	var payload CourseCodeRequest
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	if err := c.Bind(&payload); err != nil {
 		h.log.Error().Err(err).Msg("Failed to decode request body")
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request payload"})
 	}
 
 	err := h.service.ReleaseByCode(ctx, payload.Code)
 	if err != nil {
 		h.log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to release course")
-		switch err.Error() {
-		case "course has already ended":
-			http.Error(w, "Course has already ended", http.StatusBadRequest)
-		default:
-			http.Error(w, "Failed to release course", http.StatusInternalServerError)
-		}
-		return
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to release course"})
 	}
 
 	h.log.Info().Str("course_code", payload.Code).Msg("Course seat released successfully")
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Seat released successfully"})
+	return c.JSON(http.StatusOK, echo.Map{"message": "Seat released successfully"})
 }
 
 // InitDummy godoc
@@ -168,8 +136,8 @@ func (h *Handler) ReleaseCourse(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Success 200 {array} Course
 // @Router /courses/init-dummy [post]
-func (h *Handler) InitDummy(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
+func (h *Handler) InitDummy(c echo.Context) error {
+	ctx := c.Request().Context()
 
 	dummies := []*Course{
 		{
@@ -225,9 +193,14 @@ func (h *Handler) InitDummy(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	for _, course := range dummies {
+		if err := h.service.Save(ctx, course); err != nil {
+			h.log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to insert dummy course")
+		}
+	}
+
 	h.log.Info().Int("courses_count", len(dummies)).Msg("Dummy data initialized")
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dummies)
+	return c.JSON(http.StatusOK, dummies)
 }
 
 // CleanDummy godoc
@@ -238,13 +211,13 @@ func (h *Handler) InitDummy(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /courses/clean-dummy [delete]
-func (h *Handler) CleanDummy(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
+func (h *Handler) CleanDummy(c echo.Context) error {
+	ctx := c.Request().Context()
 
 	courses, err := h.service.FindAll(ctx)
 	if err != nil {
-		http.Error(w, "Failed to fetch courses", http.StatusInternalServerError)
-		return
+		h.log.Error().Err(err).Msg("Failed to fetch courses")
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch courses"})
 	}
 
 	for _, course := range courses {
@@ -254,7 +227,5 @@ func (h *Handler) CleanDummy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.log.Info().Msg("Dummy courses cleaned")
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Dummy courses cleaned"})
+	return c.JSON(http.StatusOK, echo.Map{"message": "Dummy courses cleaned"})
 }

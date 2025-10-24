@@ -84,7 +84,7 @@ paths:
       - Dummy
   /courses/find:
     get:
-      description: Retrieves course data by code
+      description: Retrieves course data by query param
       parameters:
       - description: Course Code
         in: query
@@ -116,7 +116,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get course by Code
+      summary: Get course by query param
       tags:
       - Courses
   /courses/init-dummy:
