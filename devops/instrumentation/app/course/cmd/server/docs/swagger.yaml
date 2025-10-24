@@ -21,6 +21,11 @@ definitions:
       updated_at:
         type: string
     type: object
+  course.CourseCodeRequest:
+    properties:
+      code:
+        type: string
+    type: object
 host: localhost:8082
 info:
   contact:
@@ -35,6 +40,27 @@ info:
   title: Course Service API
   version: "1.0"
 paths:
+  /courses:
+    get:
+      description: Retrieves all course data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/course.Course'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all courses
+      tags:
+      - Courses
   /courses/clean-dummy:
     delete:
       description: Delete all dummy course data
@@ -56,6 +82,43 @@ paths:
       summary: Remove all dummy courses
       tags:
       - Dummy
+  /courses/find:
+    get:
+      description: Retrieves course data by code
+      parameters:
+      - description: Course Code
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/course.Course'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get course by Code
+      tags:
+      - Courses
   /courses/init-dummy:
     post:
       description: Create dummy data for testing
@@ -71,4 +134,76 @@ paths:
       summary: Initialize dummy course data
       tags:
       - Dummy
+  /courses/release:
+    post:
+      consumes:
+      - application/json
+      description: Release a seat for a course by specifying its course code
+      parameters:
+      - description: Course Code
+        in: body
+        name: course_code
+        required: true
+        schema:
+          $ref: '#/definitions/course.CourseCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Release a seat for a course by course code
+      tags:
+      - Courses
+  /courses/reserve:
+    post:
+      consumes:
+      - application/json
+      description: Reserve a seat for a course by specifying its course code
+      parameters:
+      - description: Course Code
+        in: body
+        name: course_code
+        required: true
+        schema:
+          $ref: '#/definitions/course.CourseCodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reserve a seat for a course by course code
+      tags:
+      - Courses
 swagger: "2.0"

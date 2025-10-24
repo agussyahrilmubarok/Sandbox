@@ -100,7 +100,7 @@ func (s *store) DeleteByID(ctx context.Context, memberID string) error {
 		s.log.Error().Err(err).Str("member_id", memberID).Msg("Failed to delete member")
 		return err
 	}
-	
+
 	s.log.Info().Str("member_id", memberID).Msg("Member deleted successfully")
 	return nil
 }

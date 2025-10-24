@@ -3,6 +3,7 @@ package course
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -14,6 +15,8 @@ type IService interface {
 	FindByCode(ctx context.Context, courseCode string) (*Course, error)
 	Save(ctx context.Context, course *Course) error
 	DeleteByID(ctx context.Context, courseID string) error
+	ReserveByCode(ctx context.Context, courseCode string) error
+	ReleaseByCode(ctx context.Context, courseCode string) error
 }
 
 type service struct {
@@ -83,11 +86,6 @@ func (s *service) Save(ctx context.Context, course *Course) error {
 }
 
 func (s *service) DeleteByID(ctx context.Context, courseID string) error {
-	if courseID == "" {
-		s.log.Warn().Msg("Course ID cannot be empty")
-		return errors.New("course ID is required")
-	}
-
 	err := s.store.DeleteByID(ctx, courseID)
 	if err != nil {
 		s.log.Error().Err(err).Str("course_id", courseID).Msg("Failed to delete course")
@@ -95,5 +93,70 @@ func (s *service) DeleteByID(ctx context.Context, courseID string) error {
 	}
 
 	s.log.Info().Str("course_id", courseID).Msg("Successfully deleted course")
+	return nil
+}
+
+func (s *service) ReserveByCode(ctx context.Context, courseCode string) error {
+	course, err := s.store.FindByCode(ctx, courseCode)
+	if err != nil {
+		s.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to find course by code")
+		return err
+	}
+
+	if course == nil {
+		s.log.Warn().Str("course_code", courseCode).Msg("Course not found")
+		return nil
+	}
+
+	currentTime := time.Now()
+
+	if currentTime.After(course.EndDate) {
+		s.log.Warn().Str("course_code", courseCode).Msg("Course has already ended, cannot reserve seat")
+		return errors.New("course has already ended")
+	}
+
+	if course.SeatAvailable <= 0 {
+		s.log.Warn().Str("course_code", courseCode).Msg("No available seats to reserve")
+		return errors.New("no available seats to reserve")
+	}
+
+	course.SeatAvailable--
+
+	if err := s.store.Save(ctx, course); err != nil {
+		s.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to update course availability")
+		return err
+	}
+
+	s.log.Info().Str("course_code", courseCode).Int("remaining_seats", course.SeatAvailable).Msg("Course reserved successfully")
+	return nil
+}
+
+func (s *service) ReleaseByCode(ctx context.Context, courseCode string) error {
+	course, err := s.store.FindByCode(ctx, courseCode)
+	if err != nil {
+		s.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to find course by code")
+		return err
+	}
+
+	if course == nil {
+		s.log.Warn().Str("course_code", courseCode).Msg("Course not found")
+		return nil
+	}
+
+	currentTime := time.Now()
+
+	if currentTime.After(course.EndDate) {
+		s.log.Warn().Str("course_code", courseCode).Msg("Course has already ended, cannot release seat")
+		return errors.New("course has already ended")
+	}
+
+	course.SeatAvailable++
+
+	if err := s.store.Save(ctx, course); err != nil {
+		s.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to update course availability")
+		return err
+	}
+
+	s.log.Info().Str("course_code", courseCode).Int("remaining_seats", course.SeatAvailable).Msg("Seat released successfully")
 	return nil
 }

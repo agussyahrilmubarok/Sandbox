@@ -64,6 +64,39 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/api/v1/courses", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handler.FindAll(w, r)
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/v1/courses/find", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			handler.FindByCode(w, r)
+			return
+		}
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	})
+
+	mux.HandleFunc("/api/v1/courses/reserve", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			handler.ReserveCourse(w, r)
+			return
+		}
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	})
+
+	mux.HandleFunc("/api/v1/courses/release", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			handler.ReleaseCourse(w, r)
+			return
+		}
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	})
+
 	mux.HandleFunc("/api/v1/courses/init-dummy", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			handler.InitDummy(w, r)

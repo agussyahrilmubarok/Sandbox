@@ -24,3 +24,8 @@ const (
 func (s BookingStatus) String() string {
 	return [...]string{"pending", "confirmed", "cancelled"}[s]
 }
+
+type BookingRequest struct {
+	MemberCode string `json:"member_code"`
+	CourseCode string `json:"course_code"`
+}

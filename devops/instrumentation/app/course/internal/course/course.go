@@ -13,3 +13,7 @@ type Course struct {
 	CreatedAt     time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt     time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
+
+type CourseCodeRequest struct {
+	Code string `json:"code"`
+}

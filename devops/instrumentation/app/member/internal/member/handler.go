@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/uuid" 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
 
@@ -39,6 +39,7 @@ func (h *Handler) FindAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.log.Info().Int("member_count", len(members)).Msg("Successfully retrieved all members")
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(members)
 }
@@ -74,6 +75,7 @@ func (h *Handler) FindByCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.log.Info().Str("member_code", memberCode).Msg("Successfully retrieved member")
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(member)
 }

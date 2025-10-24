@@ -22,6 +22,145 @@ func NewHandler(service IService, log zerolog.Logger) *Handler {
 	}
 }
 
+// FindAll godoc
+// @Summary Get all courses
+// @Description Retrieves all course data
+// @Tags Courses
+// @Produce json
+// @Success 200 {array} Course
+// @Failure 500 {object} map[string]string
+// @Router /courses [get]
+func (h *Handler) FindAll(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	courses, err := h.service.FindAll(ctx)
+	if err != nil {
+		h.log.Error().Err(err).Msg("Failed to fetch courses")
+		http.Error(w, "Failed to fetch courses", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Info().Int("courses_count", len(courses)).Msg("Fetched all courses successfully")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(courses)
+}
+
+// FindByCode godoc
+// @Summary Get course by Code
+// @Description Retrieves course data by code
+// @Tags Courses
+// @Produce json
+// @Param code query string true "Course Code"
+// @Success 200 {object} Course
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /courses/find [get]
+func (h *Handler) FindByCode(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	courseCode := r.URL.Query().Get("code")
+	if courseCode == "" {
+		http.Error(w, "Missing code parameter", http.StatusBadRequest)
+		return
+	}
+
+	course, err := h.service.FindByCode(ctx, courseCode)
+	if err != nil {
+		h.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to fetch course")
+		http.Error(w, "Failed to fetch course", http.StatusInternalServerError)
+		return
+	}
+
+	if course == nil {
+		http.Error(w, "Course not found", http.StatusNotFound)
+		return
+	}
+
+	h.log.Info().Str("course_code", courseCode).Msg("Fetched course successfully")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(course)
+}
+
+// ReserveCourse godoc
+// @Summary Reserve a seat for a course by course code
+// @Description Reserve a seat for a course by specifying its course code
+// @Tags Courses
+// @Accept json
+// @Produce json
+// @Param course_code body CourseCodeRequest true "Course Code"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /courses/reserve [post]
+func (h *Handler) ReserveCourse(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+
+	var payload CourseCodeRequest
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		h.log.Error().Err(err).Msg("Failed to decode request body")
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	err := h.service.ReserveByCode(ctx, payload.Code)
+	if err != nil {
+		h.log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to reserve course")
+		switch err.Error() {
+		case "course has already ended":
+			http.Error(w, "Course has already ended", http.StatusBadRequest)
+		case "no available seats to reserve":
+			http.Error(w, "No available seats", http.StatusBadRequest)
+		default:
+			http.Error(w, "Failed to reserve course", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	h.log.Info().Str("course_code", payload.Code).Msg("Course seat reserved successfully")
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Seat reserved successfully"})
+}
+
+// ReleaseCourse godoc
+// @Summary Release a seat for a course by course code
+// @Description Release a seat for a course by specifying its course code
+// @Tags Courses
+// @Accept json
+// @Produce json
+// @Param course_code body CourseCodeRequest true "Course Code"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /courses/release [post]
+func (h *Handler) ReleaseCourse(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+
+	var payload CourseCodeRequest
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		h.log.Error().Err(err).Msg("Failed to decode request body")
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	err := h.service.ReleaseByCode(ctx, payload.Code)
+	if err != nil {
+		h.log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to release course")
+		switch err.Error() {
+		case "course has already ended":
+			http.Error(w, "Course has already ended", http.StatusBadRequest)
+		default:
+			http.Error(w, "Failed to release course", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	h.log.Info().Str("course_code", payload.Code).Msg("Course seat released successfully")
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"message": "Seat released successfully"})
+}
+
 // InitDummy godoc
 // @Summary Initialize dummy course data
 // @Description Create dummy data for testing
