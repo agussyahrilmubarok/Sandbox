@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"example.com/booking/internal/booking"
+	"example.com/booking/internal/logging"
 	"example.com/booking/pkg/config"
 	"example.com/booking/pkg/discovery"
 	"example.com/booking/pkg/discovery/consul"
@@ -85,14 +86,15 @@ func main() {
 	}()
 	defer consulRegistry.Deregister(ctx, instanceID, cfg.App.Name)
 
-	store := booking.NewStore(db, logger)
-	client := booking.NewClient(consulRegistry, logger)
-	service := booking.NewService(store, client, logger)
-	handler := booking.NewHandler(service, logger)
+	store := booking.NewStore(db)
+	client := booking.NewClient(consulRegistry)
+	service := booking.NewService(store, client)
+	handler := booking.NewHandler(service)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(logging.RequestIDMiddleware(logger))
 
 	// v1 routes
 	apiV1 := e.Group("/api/v1")

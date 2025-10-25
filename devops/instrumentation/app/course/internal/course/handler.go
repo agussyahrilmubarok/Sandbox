@@ -11,13 +11,11 @@ import (
 
 type Handler struct {
 	service IService
-	log     zerolog.Logger
 }
 
-func NewHandler(service IService, log zerolog.Logger) *Handler {
+func NewHandler(service IService) *Handler {
 	return &Handler{
 		service: service,
-		log:     log.With().Str("component", "course_handler").Logger(),
 	}
 }
 
@@ -31,14 +29,15 @@ func NewHandler(service IService, log zerolog.Logger) *Handler {
 // @Router /courses [get]
 func (h *Handler) FindAll(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
 
 	courses, err := h.service.FindAll(ctx)
 	if err != nil {
-		h.log.Error().Err(err).Msg("Failed to fetch courses")
+		log.Error().Err(err).Msg("Failed to fetch courses")
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch courses"})
 	}
 
-	h.log.Info().Int("courses_count", len(courses)).Msg("Fetched all courses successfully")
+	log.Info().Int("courses_count", len(courses)).Msg("Fetched all courses successfully")
 	return c.JSON(http.StatusOK, courses)
 }
 
@@ -55,6 +54,8 @@ func (h *Handler) FindAll(c echo.Context) error {
 // @Router /courses/find [get]
 func (h *Handler) Find(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
+
 	courseCode := c.QueryParam("code")
 	if courseCode == "" {
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Missing code parameter"})
@@ -62,11 +63,11 @@ func (h *Handler) Find(c echo.Context) error {
 
 	course, err := h.service.FindByCode(ctx, courseCode)
 	if err != nil {
-		h.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to fetch course")
+		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to fetch course")
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch course"})
 	}
 
-	h.log.Info().Str("course_code", courseCode).Msg("Fetched course successfully")
+	log.Info().Str("course_code", courseCode).Msg("Fetched course successfully")
 	return c.JSON(http.StatusOK, course)
 }
 
@@ -83,19 +84,20 @@ func (h *Handler) Find(c echo.Context) error {
 // @Router /courses/reserve [post]
 func (h *Handler) ReserveCourse(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
 
 	var payload CourseCodeRequest
 	if err := c.Bind(&payload); err != nil {
-		h.log.Error().Err(err).Msg("Failed to decode request body")
+		log.Error().Err(err).Msg("Failed to decode request body")
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request payload"})
 	}
 
 	if err := h.service.ReserveByCode(ctx, payload.Code); err != nil {
-		h.log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to reserve course")
+		log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to reserve course")
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to reserve course"})
 	}
 
-	h.log.Info().Str("course_code", payload.Code).Msg("Course seat reserved successfully")
+	log.Info().Str("course_code", payload.Code).Msg("Course seat reserved successfully")
 	return c.JSON(http.StatusOK, echo.Map{"message": "Seat reserved successfully"})
 }
 
@@ -112,20 +114,21 @@ func (h *Handler) ReserveCourse(c echo.Context) error {
 // @Router /courses/release [post]
 func (h *Handler) ReleaseCourse(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
 
 	var payload CourseCodeRequest
 	if err := c.Bind(&payload); err != nil {
-		h.log.Error().Err(err).Msg("Failed to decode request body")
+		log.Error().Err(err).Msg("Failed to decode request body")
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request payload"})
 	}
 
 	err := h.service.ReleaseByCode(ctx, payload.Code)
 	if err != nil {
-		h.log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to release course")
+		log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to release course")
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to release course"})
 	}
 
-	h.log.Info().Str("course_code", payload.Code).Msg("Course seat released successfully")
+	log.Info().Str("course_code", payload.Code).Msg("Course seat released successfully")
 	return c.JSON(http.StatusOK, echo.Map{"message": "Seat released successfully"})
 }
 
@@ -138,6 +141,7 @@ func (h *Handler) ReleaseCourse(c echo.Context) error {
 // @Router /courses/init-dummy [post]
 func (h *Handler) InitDummy(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
 
 	dummies := []*Course{
 		{
@@ -189,17 +193,17 @@ func (h *Handler) InitDummy(c echo.Context) error {
 
 	for _, course := range dummies {
 		if err := h.service.Save(ctx, course); err != nil {
-			h.log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to insert dummy course")
+			log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to insert dummy course")
 		}
 	}
 
 	for _, course := range dummies {
 		if err := h.service.Save(ctx, course); err != nil {
-			h.log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to insert dummy course")
+			log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to insert dummy course")
 		}
 	}
 
-	h.log.Info().Int("courses_count", len(dummies)).Msg("Dummy data initialized")
+	log.Info().Int("courses_count", len(dummies)).Msg("Dummy data initialized")
 	return c.JSON(http.StatusOK, dummies)
 }
 
@@ -213,19 +217,20 @@ func (h *Handler) InitDummy(c echo.Context) error {
 // @Router /courses/clean-dummy [delete]
 func (h *Handler) CleanDummy(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
 
 	courses, err := h.service.FindAll(ctx)
 	if err != nil {
-		h.log.Error().Err(err).Msg("Failed to fetch courses")
+		log.Error().Err(err).Msg("Failed to fetch courses")
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch courses"})
 	}
 
 	for _, course := range courses {
 		if err := h.service.DeleteByID(ctx, course.ID); err != nil {
-			h.log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to delete dummy course")
+			log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to delete dummy course")
 		}
 	}
 
-	h.log.Info().Msg("Dummy courses cleaned")
+	log.Info().Msg("Dummy courses cleaned")
 	return c.JSON(http.StatusOK, echo.Map{"message": "Dummy courses cleaned"})
 }

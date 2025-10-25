@@ -9,16 +9,11 @@ import (
 
 type Handler struct {
 	service IService
-	log     zerolog.Logger
 }
 
-func NewHandler(
-	service IService,
-	log zerolog.Logger,
-) *Handler {
+func NewHandler(service IService) *Handler {
 	return &Handler{
 		service: service,
-		log:     log,
 	}
 }
 
@@ -35,16 +30,17 @@ func NewHandler(
 // @Router /api/v1/booking/course [post]
 func (h *Handler) Booking(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
 
 	var payload BookingRequest
 	if err := c.Bind(&payload); err != nil {
-		h.log.Error().Err(err).Msg("Failed to decode request body")
+		log.Error().Err(err).Msg("Failed to decode request body")
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request payload"})
 	}
 
 	booking, err := h.service.Booking(ctx, payload)
 	if err != nil {
-		h.log.Error().
+		log.Error().
 			Err(err).
 			Str("member_code", payload.MemberCode).
 			Str("course_code", payload.CourseCode).
@@ -53,7 +49,7 @@ func (h *Handler) Booking(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to book course"})
 	}
 
-	h.log.Info().
+	log.Info().
 		Str("member_code", payload.MemberCode).
 		Str("course_code", payload.CourseCode).
 		Msg("Course booked successfully")
@@ -74,16 +70,17 @@ func (h *Handler) Booking(c echo.Context) error {
 // @Router /api/v2/booking/course [post]
 func (h *Handler) BookingV2(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
 
 	var payload BookingRequest
 	if err := c.Bind(&payload); err != nil {
-		h.log.Error().Err(err).Msg("Failed to decode request body")
+		log.Error().Err(err).Msg("Failed to decode request body")
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request payload"})
 	}
 
 	booking, err := h.service.Booking(ctx, payload)
 	if err != nil {
-		h.log.Error().
+		log.Error().
 			Err(err).
 			Str("member_code", payload.MemberCode).
 			Str("course_code", payload.CourseCode).
@@ -92,7 +89,7 @@ func (h *Handler) BookingV2(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to book course"})
 	}
 
-	h.log.Info().
+	log.Info().
 		Str("member_code", payload.MemberCode).
 		Str("course_code", payload.CourseCode).
 		Msg("Course booked successfully")

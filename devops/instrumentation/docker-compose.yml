@@ -36,6 +36,45 @@ services:
       timeout: 5s
       start_period: 10s
 
+  member-app:
+    build: 
+      context: ./app/member
+    container_name: member-app
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    networks:
+      - instrument_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+  
+  course-app:
+    build: 
+      context: ./app/course
+    container_name: course-app
+    restart: on-failure
+    ports:
+      - "8082:8082"
+    networks:
+      - instrument_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  booking-app:
+    build: 
+      context: ./app/booking
+    container_name: booking-app
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    networks:
+      - instrument_net
+    depends_on:
+      postgres:
+        condition: service_healthy   
+
 volumes:
   postgres_data:
 

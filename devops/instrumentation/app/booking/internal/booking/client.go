@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"example.com/booking/internal/logging"
 	"example.com/booking/pkg/discovery/consul"
 	"github.com/rs/zerolog"
 )
@@ -34,23 +35,20 @@ type IClient interface {
 
 type client struct {
 	registry *consul.Registry
-	log      zerolog.Logger
 }
 
-func NewClient(
-	registry *consul.Registry,
-	log zerolog.Logger,
-) IClient {
+func NewClient(registry *consul.Registry) IClient {
 	return &client{
 		registry: registry,
-		log:      log,
 	}
 }
 
 func (c *client) FindMemberByCode(ctx context.Context, memberCode string) (*MemberServiceMemberResponse, error) {
-	addresses, err := c.registry.ServiceAddresses(ctx, "member-service")
+	log := zerolog.Ctx(ctx)
+
+	addresses, err := c.registry.ServiceAddresses(ctx, "member-app")
 	if err != nil {
-		c.log.Error().Err(err).Msg("Failed to resolve member-service from Consul")
+		log.Error().Err(err).Msg("Failed to resolve member-app from Consul")
 		return nil, err
 	}
 	serviceAddr := addresses[0]
@@ -59,28 +57,29 @@ func (c *client) FindMemberByCode(ctx context.Context, memberCode string) (*Memb
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		c.log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to create request")
+		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to create request")
 		return nil, err
 	}
 
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", logging.GetRequestID(ctx))
 
 	httpClient := &http.Client{Timeout: 5 * time.Second}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		c.log.Error().Err(err).Str("member_code", memberCode).Msg("Request to member-service failed")
+		log.Error().Err(err).Str("member_code", memberCode).Msg("Request to member-app failed")
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		c.log.Warn().Str("member_code", memberCode).Int("status", resp.StatusCode).Msg("Member not found or error")
-		return nil, fmt.Errorf("member-service returned status: %d", resp.StatusCode)
+		log.Warn().Str("member_code", memberCode).Int("status", resp.StatusCode).Msg("Member not found or error")
+		return nil, fmt.Errorf("member-app returned status: %d", resp.StatusCode)
 	}
 
 	var member MemberServiceMemberResponse
 	if err := json.NewDecoder(resp.Body).Decode(&member); err != nil {
-		c.log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to decode member-service response")
+		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to decode member-app response")
 		return nil, err
 	}
 
@@ -88,9 +87,11 @@ func (c *client) FindMemberByCode(ctx context.Context, memberCode string) (*Memb
 }
 
 func (c *client) ReserveCourseByCode(ctx context.Context, courseCode string) (*CourseServiceMessageResponse, error) {
-	addresses, err := c.registry.ServiceAddresses(ctx, "course-service")
+	log := zerolog.Ctx(ctx)
+
+	addresses, err := c.registry.ServiceAddresses(ctx, "course-app")
 	if err != nil {
-		c.log.Error().Err(err).Msg("Failed to resolve course-service from Consul")
+		log.Error().Err(err).Msg("Failed to resolve course-app from Consul")
 		return nil, err
 	}
 	serviceAddr := addresses[0]
@@ -102,29 +103,30 @@ func (c *client) ReserveCourseByCode(ctx context.Context, courseCode string) (*C
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
-		c.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to create request")
+		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to create request")
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", logging.GetRequestID(ctx))
 
 	httpClient := &http.Client{Timeout: 5 * time.Second}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		c.log.Error().Err(err).Str("course_code", courseCode).Msg("Request to course-service failed")
+		log.Error().Err(err).Str("course_code", courseCode).Msg("Request to course-app failed")
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		c.log.Warn().Str("course_code", courseCode).Int("status", resp.StatusCode).Msg("Failed to reserve course")
-		return nil, fmt.Errorf("course-service returned status: %d", resp.StatusCode)
+		log.Warn().Str("course_code", courseCode).Int("status", resp.StatusCode).Msg("Failed to reserve course")
+		return nil, fmt.Errorf("course-app returned status: %d", resp.StatusCode)
 	}
 
 	var result CourseServiceMessageResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		c.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to decode course-service response")
+		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to decode course-app response")
 		return nil, err
 	}
 
@@ -132,9 +134,11 @@ func (c *client) ReserveCourseByCode(ctx context.Context, courseCode string) (*C
 }
 
 func (c *client) ReleaseCourseByCode(ctx context.Context, courseCode string) (*CourseServiceMessageResponse, error) {
-	addresses, err := c.registry.ServiceAddresses(ctx, "course-service")
+	log := zerolog.Ctx(ctx)
+
+	addresses, err := c.registry.ServiceAddresses(ctx, "course-app")
 	if err != nil {
-		c.log.Error().Err(err).Msg("Failed to resolve course-service from Consul")
+		log.Error().Err(err).Msg("Failed to resolve course-app from Consul")
 		return nil, err
 	}
 	serviceAddr := addresses[0]
@@ -146,29 +150,30 @@ func (c *client) ReleaseCourseByCode(ctx context.Context, courseCode string) (*C
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
-		c.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to create request")
+		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to create request")
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Request-ID", logging.GetRequestID(ctx))
 
 	httpClient := &http.Client{Timeout: 5 * time.Second}
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		c.log.Error().Err(err).Str("course_code", courseCode).Msg("Request to course-service failed")
+		log.Error().Err(err).Str("course_code", courseCode).Msg("Request to course-app failed")
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		c.log.Warn().Str("course_code", courseCode).Int("status", resp.StatusCode).Msg("Failed to release course")
-		return nil, fmt.Errorf("course-service returned status: %d", resp.StatusCode)
+		log.Warn().Str("course_code", courseCode).Int("status", resp.StatusCode).Msg("Failed to release course")
+		return nil, fmt.Errorf("course-app returned status: %d", resp.StatusCode)
 	}
 
 	var result CourseServiceMessageResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		c.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to decode course-service response")
+		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to decode course-app response")
 		return nil, err
 	}
 

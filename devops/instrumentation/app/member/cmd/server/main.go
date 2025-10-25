@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"example.com/member/internal/logging"
 	"example.com/member/internal/member"
 	"example.com/member/pkg/config"
 	"example.com/member/pkg/discovery"
@@ -86,13 +87,14 @@ func main() {
 	}()
 	defer consulRegistry.Deregister(ctx, instanceID, cfg.App.Name)
 
-	store := member.NewStore(db, logger)
-	service := member.NewService(store, logger)
-	handler := member.NewHandler(service, logger)
+	store := member.NewStore(db)
+	service := member.NewService(store)
+	handler := member.NewHandler(service)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(logging.RequestIDMiddleware(logger))
 
 	api := e.Group("/api/v1/members")
 

@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "member-service",
+    "name": "member-app",
     "host": "localhost",
     "port": 8081,
     "env": "development"

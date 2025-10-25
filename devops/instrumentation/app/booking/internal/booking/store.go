@@ -32,88 +32,100 @@ type IStore interface {
 }
 
 type store struct {
-	db  *gorm.DB
-	log zerolog.Logger
+	db *gorm.DB
 }
 
-func NewStore(db *gorm.DB, log zerolog.Logger) IStore {
+func NewStore(db *gorm.DB) IStore {
 	return &store{
-		db:  db,
-		log: log.With().Str("component", "booking_store").Logger(),
+		db: db,
 	}
 }
 
 func (s *store) FindAll(ctx context.Context) ([]Booking, error) {
+	log := zerolog.Ctx(ctx)
+
 	var bookings []Booking
 	if err := s.db.WithContext(ctx).Find(&bookings).Error; err != nil {
-		s.log.Error().Err(err).Msg("Failed to fetch all bookings")
+		log.Error().Err(err).Msg("Failed to fetch all bookings")
 		return nil, err
 	}
 
-	s.log.Info().Int("booking_count", len(bookings)).Msg("Successfully fetched all bookings")
+	log.Info().Int("booking_count", len(bookings)).Msg("Successfully fetched all bookings")
 	return bookings, nil
 }
 
 func (s *store) FindAllByMemberCode(ctx context.Context, memberCode string) ([]Booking, error) {
+	log := zerolog.Ctx(ctx)
+
 	var bookings []Booking
 	if err := s.db.WithContext(ctx).Where("member_code = ?", memberCode).Find(&bookings).Error; err != nil {
-		s.log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to fetch bookings by member code")
+		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to fetch bookings by member code")
 		return nil, err
 	}
 
-	s.log.Info().Int("booking_count", len(bookings)).Str("member_code", memberCode).Msg("Successfully fetched bookings for member")
+	log.Info().Int("booking_count", len(bookings)).Str("member_code", memberCode).Msg("Successfully fetched bookings for member")
 	return bookings, nil
 }
 
 func (s *store) FindAllByCourseCode(ctx context.Context, courseCode string) ([]Booking, error) {
+	log := zerolog.Ctx(ctx)
+
 	var bookings []Booking
 	if err := s.db.WithContext(ctx).Where("course_code = ?", courseCode).Find(&bookings).Error; err != nil {
-		s.log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to fetch bookings by course code")
+		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to fetch bookings by course code")
 		return nil, err
 	}
 
-	s.log.Info().Int("booking_count", len(bookings)).Str("course_code", courseCode).Msg("Successfully fetched bookings for course")
+	log.Info().Int("booking_count", len(bookings)).Str("course_code", courseCode).Msg("Successfully fetched bookings for course")
 	return bookings, nil
 }
 
 func (s *store) FindAllByStatus(ctx context.Context, status BookingStatus) ([]Booking, error) {
+	log := zerolog.Ctx(ctx)
+
 	var bookings []Booking
 	if err := s.db.WithContext(ctx).Where("status = ?", status).Find(&bookings).Error; err != nil {
-		s.log.Error().Err(err).Str("status", status.String()).Msg("Failed to fetch bookings by status")
+		log.Error().Err(err).Str("status", status.String()).Msg("Failed to fetch bookings by status")
 		return nil, err
 	}
 
-	s.log.Info().Int("booking_count", len(bookings)).Str("status", status.String()).Msg("Successfully fetched bookings by status")
+	log.Info().Int("booking_count", len(bookings)).Str("status", status.String()).Msg("Successfully fetched bookings by status")
 	return bookings, nil
 }
 
 func (s *store) FindByID(ctx context.Context, bookingID string) (*Booking, error) {
+	log := zerolog.Ctx(ctx)
+
 	var booking Booking
 	if err := s.db.WithContext(ctx).First(&booking, "id = ?", bookingID).Error; err != nil {
-		s.log.Error().Err(err).Str("booking_id", bookingID).Msg("Failed to fetch booking by ID")
+		log.Error().Err(err).Str("booking_id", bookingID).Msg("Failed to fetch booking by ID")
 		return nil, err
 	}
 
-	s.log.Info().Str("booking_id", booking.ID).Msg("Successfully fetched booking by ID")
+	log.Info().Str("booking_id", booking.ID).Msg("Successfully fetched booking by ID")
 	return &booking, nil
 }
 
 func (s *store) Save(ctx context.Context, booking *Booking) error {
+	log := zerolog.Ctx(ctx)
+
 	if err := s.db.WithContext(ctx).Save(booking).Error; err != nil {
-		s.log.Error().Err(err).Str("booking_id", booking.ID).Msg("Failed to save booking")
+		log.Error().Err(err).Str("booking_id", booking.ID).Msg("Failed to save booking")
 		return err
 	}
 
-	s.log.Info().Str("booking_id", booking.ID).Msg("Booking saved successfully")
+	log.Info().Str("booking_id", booking.ID).Msg("Booking saved successfully")
 	return nil
 }
 
 func (s *store) DeleteByID(ctx context.Context, bookingID string) error {
+	log := zerolog.Ctx(ctx)
+
 	if err := s.db.WithContext(ctx).Delete(&Booking{}, "id = ?", bookingID).Error; err != nil {
-		s.log.Error().Err(err).Str("booking_id", bookingID).Msg("Failed to delete booking")
+		log.Error().Err(err).Str("booking_id", bookingID).Msg("Failed to delete booking")
 		return err
 	}
 
-	s.log.Info().Str("booking_id", bookingID).Msg("Booking deleted successfully")
+	log.Info().Str("booking_id", bookingID).Msg("Booking deleted successfully")
 	return nil
 }

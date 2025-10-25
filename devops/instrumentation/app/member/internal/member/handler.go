@@ -11,13 +11,11 @@ import (
 
 type Handler struct {
 	service IService
-	log     zerolog.Logger
 }
 
-func NewHandler(service IService, log zerolog.Logger) *Handler {
+func NewHandler(service IService) *Handler {
 	return &Handler{
 		service: service,
-		log:     log.With().Str("component", "member_handler").Logger(),
 	}
 }
 
@@ -31,14 +29,15 @@ func NewHandler(service IService, log zerolog.Logger) *Handler {
 // @Router /members [get]
 func (h *Handler) FindAll(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
 
 	members, err := h.service.FindAll(ctx)
 	if err != nil {
-		h.log.Error().Err(err).Msg("Failed to fetch members")
+		log.Error().Err(err).Msg("Failed to fetch members")
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch members"})
 	}
 
-	h.log.Info().Int("member_count", len(members)).Msg("Successfully retrieved all members")
+	log.Info().Int("member_count", len(members)).Msg("Successfully retrieved all members")
 	return c.JSON(http.StatusOK, members)
 }
 
@@ -55,6 +54,8 @@ func (h *Handler) FindAll(c echo.Context) error {
 // @Router /members/find [get]
 func (h *Handler) Find(c echo.Context) error {
 	ctx := c.Request().Context()
+	log := zerolog.Ctx(ctx)
+
 	memberCode := c.QueryParam("code")
 
 	if memberCode == "" {
@@ -63,11 +64,11 @@ func (h *Handler) Find(c echo.Context) error {
 
 	member, err := h.service.FindByCode(ctx, memberCode)
 	if err != nil {
-		h.log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to fetch member")
+		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to fetch member")
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch member"})
 	}
 
-	h.log.Info().Str("member_code", memberCode).Msg("Successfully retrieved member")
+	log.Info().Str("member_code", memberCode).Msg("Successfully retrieved member")
 	return c.JSON(http.StatusOK, member)
 }
 
@@ -81,6 +82,7 @@ func (h *Handler) Find(c echo.Context) error {
 // @Router /members/init-dummy [post]
 func (h *Handler) InitDummy(c echo.Context) error {
 	ctx := context.Background()
+	log := zerolog.Ctx(ctx)
 
 	dummies := []*Member{
 		{ID: uuid.New().String(), Code: "MC-1XX", Name: "John Doe", Email: "johndoe@mail.com"},
@@ -89,12 +91,12 @@ func (h *Handler) InitDummy(c echo.Context) error {
 
 	for _, m := range dummies {
 		if _, err := h.service.Save(ctx, m); err != nil {
-			h.log.Error().Err(err).Str("member_id", m.ID).Msg("Failed to insert dummy member")
+			log.Error().Err(err).Str("member_id", m.ID).Msg("Failed to insert dummy member")
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to insert dummy member"})
 		}
 	}
 
-	h.log.Info().Msg("Dummy data initialized")
+	log.Info().Msg("Dummy data initialized")
 	return c.JSON(http.StatusOK, dummies)
 }
 
@@ -108,20 +110,21 @@ func (h *Handler) InitDummy(c echo.Context) error {
 // @Router /members/clean-dummy [delete]
 func (h *Handler) CleanDummy(c echo.Context) error {
 	ctx := context.Background()
+	log := zerolog.Ctx(ctx)
 
 	members, err := h.service.FindAll(ctx)
 	if err != nil {
-		h.log.Error().Err(err).Msg("Failed to fetch members")
+		log.Error().Err(err).Msg("Failed to fetch members")
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch members"})
 	}
 
 	for _, m := range members {
 		if err := h.service.DeleteByID(ctx, m.ID); err != nil {
-			h.log.Error().Err(err).Str("member_id", m.ID).Msg("Failed to delete dummy member")
+			log.Error().Err(err).Str("member_id", m.ID).Msg("Failed to delete dummy member")
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to delete dummy member"})
 		}
 	}
 
-	h.log.Info().Msg("Dummy data cleaned")
+	log.Info().Msg("Dummy data cleaned")
 	return c.JSON(http.StatusOK, echo.Map{"message": "Dummy data cleaned"})
 }

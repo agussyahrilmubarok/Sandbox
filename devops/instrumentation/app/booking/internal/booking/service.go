@@ -17,30 +17,30 @@ type IService interface {
 type service struct {
 	store  IStore
 	client IClient
-	log    zerolog.Logger
 }
 
-func NewService(store IStore, client IClient, log zerolog.Logger) IService {
+func NewService(store IStore, client IClient) IService {
 	return &service{
 		store:  store,
 		client: client,
-		log:    log.With().Str("component", "booking_service").Logger(),
 	}
 }
 
 func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking, error) {
+	log := zerolog.Ctx(ctx)
+
 	memberResp, err := s.client.FindMemberByCode(ctx, request.MemberCode)
 	if err != nil {
-		s.log.Error().Err(err).Str("member_code", request.MemberCode).Msg("Failed to find member")
+		log.Error().Err(err).Str("member_code", request.MemberCode).Msg("Failed to find member")
 		return nil, fmt.Errorf("member not found: %w", err)
 	}
 
 	courseResp, err := s.client.ReserveCourseByCode(ctx, request.CourseCode)
 	if err != nil {
-		s.log.Error().Err(err).Str("course_code", request.CourseCode).Msg("Failed to reserve course")
+		log.Error().Err(err).Str("course_code", request.CourseCode).Msg("Failed to reserve course")
 		return nil, fmt.Errorf("failed to reserve course: %w", err)
 	}
-	s.log.Info().Str("course_code", request.CourseCode).Msg("Course reserved: " + courseResp.Message)
+	log.Info().Str("course_code", request.CourseCode).Msg("Course reserved: " + courseResp.Message)
 
 	booking := &Booking{
 		ID:          uuid.New().String(),
@@ -54,19 +54,21 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 	}
 
 	if err := s.store.Save(ctx, booking); err != nil {
-		s.log.Error().Err(err).Str("booking_id", booking.ID).Msg("Failed to save booking, releasing course")
+		log.Error().Err(err).Str("booking_id", booking.ID).Msg("Failed to save booking, releasing course")
 		if _, releaseErr := s.client.ReleaseCourseByCode(ctx, request.CourseCode); releaseErr != nil {
-			s.log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
+			log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
 		}
 
 		return nil, fmt.Errorf("failed to save booking: %w", err)
 	}
 
-	s.log.Info().Str("booking_id", booking.ID).Str("member_code", memberResp.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created")
+	log.Info().Str("booking_id", booking.ID).Str("member_code", memberResp.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created")
 	return booking, nil
 }
 
 func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booking, error) {
+	log := zerolog.Ctx(ctx)
+
 	type result struct {
 		member *MemberServiceMemberResponse
 		course *CourseServiceMessageResponse
@@ -118,13 +120,13 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 	}
 
 	if err := s.store.Save(ctx, booking); err != nil {
-		s.log.Error().Err(err).Str("booking_id", booking.ID).Msg("Failed to save booking, releasing course")
+		log.Error().Err(err).Str("booking_id", booking.ID).Msg("Failed to save booking, releasing course")
 		if _, releaseErr := s.client.ReleaseCourseByCode(ctx, request.CourseCode); releaseErr != nil {
-			s.log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
+			log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
 		}
 		return nil, fmt.Errorf("failed to save booking: %w", err)
 	}
 
-	s.log.Info().Str("booking_id", booking.ID).Str("member_code", memberRes.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created (V2)")
+	log.Info().Str("booking_id", booking.ID).Str("member_code", memberRes.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created (V2)")
 	return booking, nil
 }

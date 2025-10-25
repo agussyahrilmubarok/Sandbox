@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "booking-service",
+    "name": "booking-app",
     "host": "localhost",
     "port": 8080,
     "env": "development"

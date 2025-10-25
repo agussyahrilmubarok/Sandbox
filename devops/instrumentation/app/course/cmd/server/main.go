@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"example.com/course/internal/course"
+	"example.com/course/internal/logging"
 	"example.com/course/pkg/config"
 	"example.com/course/pkg/discovery"
 	"example.com/course/pkg/discovery/consul"
@@ -86,13 +87,14 @@ func main() {
 	}()
 	defer consulRegistry.Deregister(ctx, instanceID, cfg.App.Name)
 
-	store := course.NewStore(db, logger)
-	service := course.NewService(store, logger)
-	handler := course.NewHandler(service, logger)
+	store := course.NewStore(db)
+	service := course.NewService(store)
+	handler := course.NewHandler(service)
 
 	e := echo.New()
-	e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(logging.RequestIDMiddleware(logger))
 
 	api := e.Group("/api/v1/courses")
 	api.GET("", handler.FindAll)
