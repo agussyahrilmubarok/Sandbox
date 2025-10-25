@@ -2,9 +2,9 @@ package course
 
 import (
 	"context"
-	"errors"
 	"time"
 
+	"example.com/course/pkg/exception"
 	"github.com/rs/zerolog"
 )
 
@@ -35,7 +35,7 @@ func (s *service) FindAll(ctx context.Context) ([]Course, error) {
 	courses, err := s.store.FindAll(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch all courses from store")
-		return nil, err
+		return nil, exception.NewNotFound("Failed to fetch all courses", err)
 	}
 
 	log.Info().Int("courses_count", len(courses)).Msg("Successfully fetched all courses")
@@ -48,12 +48,12 @@ func (s *service) FindByID(ctx context.Context, courseID string) (*Course, error
 	course, err := s.store.FindByID(ctx, courseID)
 	if err != nil {
 		log.Error().Err(err).Str("course_id", courseID).Msg("Failed to find course by ID")
-		return nil, err
+		return nil, exception.NewNotFound("Course not found", err)
 	}
 
 	if course == nil {
 		log.Warn().Str("course_id", courseID).Msg("Course not found")
-		return nil, errors.New("course not found")
+		return nil, exception.NewNotFound("Course not found", nil)
 	}
 
 	log.Info().Str("course_id", courseID).Msg("Successfully found course by ID")
@@ -66,12 +66,12 @@ func (s *service) FindByCode(ctx context.Context, courseCode string) (*Course, e
 	course, err := s.store.FindByCode(ctx, courseCode)
 	if err != nil {
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to find course by code")
-		return nil, err
+		return nil, exception.NewNotFound("Course not found", err)
 	}
 
 	if course == nil {
 		log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return nil, errors.New("course not found")
+		return nil, exception.NewNotFound("Course not found", nil)
 	}
 
 	log.Info().Str("course_code", courseCode).Msg("Successfully found course by code")
@@ -110,24 +110,24 @@ func (s *service) ReserveByCode(ctx context.Context, courseCode string) error {
 	course, err := s.store.FindByCode(ctx, courseCode)
 	if err != nil {
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to find course by code")
-		return err
+		return exception.NewNotFound("Course not found", err)
 	}
 
 	if course == nil {
 		log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return errors.New("course not found")
+		return exception.NewNotFound("Course not found", nil)
 	}
 
 	currentTime := time.Now()
 
 	if currentTime.After(course.EndDate) {
 		log.Warn().Str("course_code", courseCode).Msg("Course has already ended, cannot reserve seat")
-		return errors.New("course has already ended")
+		return exception.NewBadRequest("Course has already ended", nil)
 	}
 
 	if course.SeatAvailable <= 0 {
 		log.Warn().Str("course_code", courseCode).Msg("No available seats to reserve")
-		return errors.New("no available seats to reserve")
+		return exception.NewBadRequest("No available seats to reserve", nil)
 	}
 
 	course.SeatAvailable--
@@ -147,19 +147,19 @@ func (s *service) ReleaseByCode(ctx context.Context, courseCode string) error {
 	course, err := s.store.FindByCode(ctx, courseCode)
 	if err != nil {
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to find course by code")
-		return err
+		return exception.NewNotFound("Course not found", err)
 	}
 
 	if course == nil {
 		log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return errors.New("course not found")
+		return exception.NewNotFound("Course not found", nil)
 	}
 
 	currentTime := time.Now()
 
 	if currentTime.After(course.EndDate) {
 		log.Warn().Str("course_code", courseCode).Msg("Course has already ended, cannot release seat")
-		return errors.New("course has already ended")
+		return exception.NewBadRequest("Course has already ended", nil)
 	}
 
 	course.SeatAvailable++

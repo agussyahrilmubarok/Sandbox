@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"example.com/booking/pkg/exception"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
@@ -32,13 +33,13 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 	memberResp, err := s.client.FindMemberByCode(ctx, request.MemberCode)
 	if err != nil {
 		log.Error().Err(err).Str("member_code", request.MemberCode).Msg("Failed to find member")
-		return nil, fmt.Errorf("member not found: %w", err)
+		return nil, exception.NewNotFound("Member not found", err)
 	}
 
 	courseResp, err := s.client.ReserveCourseByCode(ctx, request.CourseCode)
 	if err != nil {
 		log.Error().Err(err).Str("course_code", request.CourseCode).Msg("Failed to reserve course")
-		return nil, fmt.Errorf("failed to reserve course: %w", err)
+		return nil, exception.NewNotFound("Failed to reserve course", err)
 	}
 	log.Info().Str("course_code", request.CourseCode).Msg("Course reserved: " + courseResp.Message)
 
@@ -59,7 +60,7 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 			log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
 		}
 
-		return nil, fmt.Errorf("failed to save booking: %w", err)
+		return nil, exception.NewInternal("Failed to save booking", err)
 	}
 
 	log.Info().Str("booking_id", booking.ID).Str("member_code", memberResp.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created")
@@ -95,16 +96,16 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 		select {
 		case m := <-memberCh:
 			if m.err != nil {
-				return nil, fmt.Errorf("member not found: %w", m.err)
+				return nil, exception.NewNotFound("Member not found", m.err)
 			}
 			memberRes = m.member
 		case c := <-courseCh:
 			if c.err != nil {
-				return nil, fmt.Errorf("failed to reserve course: %w", c.err)
+				return nil, exception.NewNotFound("Failed to reserve course", c.err)
 			}
 			// courseRes = c.course
 		case <-ctx.Done():
-			return nil, fmt.Errorf("context cancelled or timed out")
+			return nil, exception.NewRequestTimeout("Context cancelled or timed out", nil)
 		}
 	}
 
@@ -124,7 +125,7 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 		if _, releaseErr := s.client.ReleaseCourseByCode(ctx, request.CourseCode); releaseErr != nil {
 			log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
 		}
-		return nil, fmt.Errorf("failed to save booking: %w", err)
+		return nil, exception.NewInternal("Failed to save booking", err)
 	}
 
 	log.Info().Str("booking_id", booking.ID).Str("member_code", memberRes.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created (V2)")

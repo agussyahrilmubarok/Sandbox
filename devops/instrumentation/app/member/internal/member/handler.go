@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"example.com/member/pkg/exception"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -34,6 +35,11 @@ func (h *Handler) FindAll(c echo.Context) error {
 	members, err := h.service.FindAll(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch members")
+		if httpErr, ok := err.(*exception.Http); ok {
+			return c.JSON(httpErr.Code, map[string]string{
+				"error": httpErr.Message,
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch members"})
 	}
 
@@ -65,6 +71,11 @@ func (h *Handler) Find(c echo.Context) error {
 	member, err := h.service.FindByCode(ctx, memberCode)
 	if err != nil {
 		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to fetch member")
+		if httpErr, ok := err.(*exception.Http); ok {
+			return c.JSON(httpErr.Code, map[string]string{
+				"error": httpErr.Message,
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch member"})
 	}
 

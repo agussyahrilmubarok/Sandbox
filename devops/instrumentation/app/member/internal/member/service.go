@@ -2,8 +2,8 @@ package member
 
 import (
 	"context"
-	"errors"
 
+	"example.com/member/pkg/exception"
 	"github.com/rs/zerolog"
 )
 
@@ -46,12 +46,12 @@ func (s *service) FindByID(ctx context.Context, memberID string) (*Member, error
 	member, err := s.store.FindByID(ctx, memberID)
 	if err != nil {
 		log.Error().Err(err).Str("member_id", memberID).Msg("Failed to fetch member by ID")
-		return nil, err
+		return nil, exception.NewNotFound("Member not found", err)
 	}
 
 	if member == nil {
 		log.Warn().Str("member_id", memberID).Msg("Member not found")
-		return nil, errors.New("member not found")
+		return nil, exception.NewNotFound("Member not found", nil)
 	}
 
 	log.Info().Str("member_id", member.ID).Msg("Successfully fetched member by ID")
@@ -64,12 +64,12 @@ func (s *service) FindByCode(ctx context.Context, memberCode string) (*Member, e
 	member, err := s.store.FindByCode(ctx, memberCode)
 	if err != nil {
 		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to fetch member by Code")
-		return nil, err
+		return nil, exception.NewNotFound("Member not found", err)
 	}
 
 	if member == nil {
 		log.Warn().Str("member_code", memberCode).Msg("Member not found")
-		return nil, errors.New("member not found")
+		return nil, exception.NewNotFound("Member not found", nil)
 	}
 
 	log.Info().Str("member_code", member.ID).Msg("Successfully fetched member by Code")
@@ -82,12 +82,12 @@ func (s *service) FindByEmail(ctx context.Context, memberEmail string) (*Member,
 	member, err := s.store.FindByCode(ctx, memberEmail)
 	if err != nil {
 		log.Error().Err(err).Str("member_email", memberEmail).Msg("Failed to fetch member by Email")
-		return nil, err
+		return nil, exception.NewNotFound("Member not found", err)
 	}
 
 	if member == nil {
 		log.Warn().Str("member_email", memberEmail).Msg("Member not found")
-		return nil, errors.New("member not found")
+		return nil, exception.NewNotFound("Member not found", nil)
 	}
 
 	log.Info().Str("member_email", member.ID).Msg("Successfully fetched member by Email")

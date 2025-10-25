@@ -43,6 +43,8 @@ services:
     restart: on-failure
     ports:
       - "8081:8081"
+    volumes:
+      - ./logging/member-app:/app/logs
     networks:
       - instrument_net
     depends_on:
@@ -56,6 +58,8 @@ services:
     restart: on-failure
     ports:
       - "8082:8082"
+    volumes:
+      - ./logging/course-app:/app/logs
     networks:
       - instrument_net
     depends_on:
@@ -69,14 +73,67 @@ services:
     restart: on-failure
     ports:
       - "8080:8080"
+    volumes:
+      - ./logging/booking-app:/app/logs
     networks:
       - instrument_net
     depends_on:
       postgres:
         condition: service_healthy   
+  
+  grafana:
+    image: grafana/grafana:12.2
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./scripts/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    networks:
+      - instrument_net
+    depends_on:
+      - loki
+  
+  loki:
+    image: grafana/loki:3.5.7
+    container_name: loki
+    restart: on-failure
+    command: -config.file=/etc/loki/config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./scripts/loki:/etc/loki
+    networks:
+      - instrument_net
+    depends_on:
+      - member-app
+      - course-app
+      - booking-app
+  
+  fluentbit:
+    image: fluent/fluent-bit:4.0
+    container_name: fluentbit
+    restart: on-failure
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./scripts/fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./scripts/fluentbit/map.json:/fluent-bit/etc/map.json
+      - ./logging:/app/logs
+    networks:
+      - instrument_net
+    depends_on:
+      - loki
 
 volumes:
   postgres_data:
+  grafana_data:
 
 networks:
   instrument_net:

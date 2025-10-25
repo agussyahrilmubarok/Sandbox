@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"example.com/course/pkg/exception"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -34,6 +35,11 @@ func (h *Handler) FindAll(c echo.Context) error {
 	courses, err := h.service.FindAll(ctx)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to fetch courses")
+		if httpErr, ok := err.(*exception.Http); ok {
+			return c.JSON(httpErr.Code, map[string]string{
+				"error": httpErr.Message,
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch courses"})
 	}
 
@@ -64,6 +70,11 @@ func (h *Handler) Find(c echo.Context) error {
 	course, err := h.service.FindByCode(ctx, courseCode)
 	if err != nil {
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to fetch course")
+		if httpErr, ok := err.(*exception.Http); ok {
+			return c.JSON(httpErr.Code, map[string]string{
+				"error": httpErr.Message,
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch course"})
 	}
 
@@ -94,6 +105,11 @@ func (h *Handler) ReserveCourse(c echo.Context) error {
 
 	if err := h.service.ReserveByCode(ctx, payload.Code); err != nil {
 		log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to reserve course")
+		if httpErr, ok := err.(*exception.Http); ok {
+			return c.JSON(httpErr.Code, map[string]string{
+				"error": httpErr.Message,
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to reserve course"})
 	}
 
@@ -125,6 +141,11 @@ func (h *Handler) ReleaseCourse(c echo.Context) error {
 	err := h.service.ReleaseByCode(ctx, payload.Code)
 	if err != nil {
 		log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to release course")
+		if httpErr, ok := err.(*exception.Http); ok {
+			return c.JSON(httpErr.Code, map[string]string{
+				"error": httpErr.Message,
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to release course"})
 	}
 
@@ -144,6 +165,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 	log := zerolog.Ctx(ctx)
 
 	dummies := []*Course{
+		// available start_date, end_date and seat.
 		{
 			ID:            uuid.New().String(),
 			Code:          "C-001",
@@ -151,8 +173,9 @@ func (h *Handler) InitDummy(c echo.Context) error {
 			Price:         199.99,
 			StartDate:     time.Now(),                         // Starts now
 			EndDate:       time.Now().Add(7 * 24 * time.Hour), // Ends in 7 days
-			SeatAvailable: 30,
+			SeatAvailable: 10,
 		},
+		// available start_date, end_date, but not seat.
 		{
 			ID:            uuid.New().String(),
 			Code:          "C-002",
@@ -160,7 +183,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 			Price:         249.99,
 			StartDate:     time.Now().Add(1 * time.Hour),      // Starts now + 1 hour
 			EndDate:       time.Now().Add(8 * 24 * time.Hour), // Ends in 8 days
-			SeatAvailable: 25,
+			SeatAvailable: 0,
 		},
 		{
 			ID:            uuid.New().String(),
@@ -171,6 +194,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 			EndDate:       time.Now().Add(3 * 24 * time.Hour), // Ends in 3 days
 			SeatAvailable: 20,
 		},
+		// not available start_date, end_date, but available seat.
 		{
 			ID:            uuid.New().String(),
 			Code:          "C-004",

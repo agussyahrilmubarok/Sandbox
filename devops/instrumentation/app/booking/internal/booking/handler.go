@@ -3,6 +3,7 @@ package booking
 import (
 	"net/http"
 
+	"example.com/booking/pkg/exception"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 )
@@ -46,6 +47,12 @@ func (h *Handler) Booking(c echo.Context) error {
 			Str("course_code", payload.CourseCode).
 			Msg("Failed to book course")
 
+		if httpErr, ok := err.(*exception.Http); ok {
+			return c.JSON(httpErr.Code, map[string]string{
+				"error": httpErr.Message,
+			})
+		}
+
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to book course"})
 	}
 
@@ -85,6 +92,12 @@ func (h *Handler) BookingV2(c echo.Context) error {
 			Str("member_code", payload.MemberCode).
 			Str("course_code", payload.CourseCode).
 			Msg("Failed to book course")
+
+		if httpErr, ok := err.(*exception.Http); ok {
+			return c.JSON(httpErr.Code, map[string]string{
+				"error": httpErr.Message,
+			})
+		}
 
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to book course"})
 	}
