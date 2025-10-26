@@ -3,7 +3,11 @@
     "name": "course-app",
     "host": "course-app",
     "port": 8082,
-    "env": "production"
+    "env": "production",
+    "metric": {
+      "host": "course-app",
+      "port": 7072
+    }
   },
   "postgres": {
     "host": "postgres",

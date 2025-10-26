@@ -12,9 +12,11 @@ import (
 
 	"example.com/member/internal/logging"
 	"example.com/member/internal/member"
+	"example.com/member/internal/metrics"
 	"example.com/member/pkg/config"
 	"example.com/member/pkg/discovery"
 	"example.com/member/pkg/discovery/consul"
+	"example.com/member/pkg/vm"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -87,6 +89,19 @@ func main() {
 	}()
 	defer consulRegistry.Deregister(ctx, instanceID, cfg.App.Name)
 
+	go func() {
+		ticker := time.NewTicker(10 * time.Second)
+		defer ticker.Stop()
+
+		tickerChannel := ticker.C
+
+		for range tickerChannel {
+			vm.UpdateCPUUsage()
+			vm.UpdateMemoryUsage()
+			vm.UpdateDiskUsage()
+		}
+	}()
+
 	store := member.NewStore(db)
 	service := member.NewService(store)
 	handler := member.NewHandler(service)
@@ -95,6 +110,7 @@ func main() {
 	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(logging.RequestIDMiddleware(logger))
+	e.Use(metrics.PrometheusMiddleware)
 
 	api := e.Group("/api/v1/members")
 
@@ -116,6 +132,14 @@ func main() {
 		logger.Info().Msgf("Swagger available at http://%s:%d/swagger/index.html", cfg.App.Host, cfg.App.Port)
 		if err := e.Start(fmt.Sprintf(":%d", cfg.App.Port)); err != nil && err != http.ErrServerClosed {
 			logger.Fatal().Err(err).Msg("Failed to start server")
+		}
+	}()
+
+	go func() {
+		metricsServer := metrics.NewMetricServer(cfg)
+		logger.Info().Msgf("Prometheus metrics server running at http://%s:%d/metrics/prometheus", cfg.App.Metric.Host, cfg.App.Metric.Port)
+		if err := metricsServer.Start(fmt.Sprintf(":%d", cfg.App.Metric.Port)); err != nil && err != http.ErrServerClosed {
+			logger.Fatal().Err(err).Msg("Failed to start Prometheus metrics server")
 		}
 	}()
 

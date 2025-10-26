@@ -26,7 +26,7 @@ func NewRegistry(addr string) (*Registry, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &Registry{client: client}, nil
 }
 
@@ -41,7 +41,7 @@ func (r *Registry) Register(ctx context.Context, instanceID string, serviceName 
 	if err != nil {
 		return err
 	}
-	
+
 	return r.client.Agent().ServiceRegister(&consul.AgentServiceRegistration{
 		Address: parts[0],
 		ID:      instanceID,
@@ -69,7 +69,7 @@ func (r *Registry) ServiceAddresses(ctx context.Context, serviceName string) ([]
 	for _, e := range entries {
 		res = append(res, fmt.Sprintf("%s:%d", e.Service.Address, e.Service.Port))
 	}
-	
+
 	return res, nil
 }
 

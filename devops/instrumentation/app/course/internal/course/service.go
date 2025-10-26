@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"example.com/course/internal/metrics"
 	"example.com/course/pkg/exception"
 	"github.com/rs/zerolog"
 )
@@ -37,6 +38,18 @@ func (s *service) FindAll(ctx context.Context) ([]Course, error) {
 		log.Error().Err(err).Msg("Failed to fetch all courses from store")
 		return nil, exception.NewNotFound("Failed to fetch all courses", err)
 	}
+
+	metrics.TotalCourses.Set(float64(len(courses)))
+
+	availableCount := 0
+	for _, course := range courses {
+		if course.SeatAvailable > 0 {
+			availableCount++
+		}
+	}
+
+	metrics.AvailableCourses.Set(float64(availableCount))
+	metrics.ReservedCourses.Set(float64(len(courses) - availableCount))
 
 	log.Info().Int("courses_count", len(courses)).Msg("Successfully fetched all courses")
 	return courses, nil
@@ -87,6 +100,8 @@ func (s *service) Save(ctx context.Context, course *Course) error {
 		return err
 	}
 
+	metrics.TotalCourses.Inc()
+
 	log.Info().Str("course_id", course.ID).Str("course_code", course.Code).Msg("Successfully saved course")
 	return nil
 }
@@ -99,6 +114,8 @@ func (s *service) DeleteByID(ctx context.Context, courseID string) error {
 		log.Error().Err(err).Str("course_id", courseID).Msg("Failed to delete course")
 		return err
 	}
+
+	metrics.TotalCourses.Dec()
 
 	log.Info().Str("course_id", courseID).Msg("Successfully deleted course")
 	return nil
@@ -137,6 +154,8 @@ func (s *service) ReserveByCode(ctx context.Context, courseCode string) error {
 		return err
 	}
 
+	metrics.ReservedCourses.Inc()
+
 	log.Info().Str("course_code", courseCode).Int("remaining_seats", course.SeatAvailable).Msg("Course reserved successfully")
 	return nil
 }
@@ -168,6 +187,8 @@ func (s *service) ReleaseByCode(ctx context.Context, courseCode string) error {
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to update course availability")
 		return err
 	}
+
+	metrics.ReservedCourses.Dec()
 
 	log.Info().Str("course_code", courseCode).Int("remaining_seats", course.SeatAvailable).Msg("Seat released successfully")
 	return nil

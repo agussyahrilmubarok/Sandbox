@@ -3,6 +3,7 @@ package member
 import (
 	"context"
 
+	"example.com/member/internal/metrics"
 	"example.com/member/pkg/exception"
 	"github.com/rs/zerolog"
 )
@@ -102,6 +103,8 @@ func (s *service) Save(ctx context.Context, member *Member) (*Member, error) {
 		return nil, err
 	}
 
+	metrics.TotalMembers.Inc()
+
 	log.Info().Str("member_id", member.ID).Msg("Member saved successfully")
 	return member, nil
 }
@@ -113,6 +116,8 @@ func (s *service) DeleteByID(ctx context.Context, memberID string) error {
 		log.Error().Err(err).Str("member_id", memberID).Msg("Failed to delete member")
 		return err
 	}
+
+	metrics.TotalMembers.Dec()
 
 	log.Info().Str("member_id", memberID).Msg("Member deleted successfully")
 	return nil

@@ -43,6 +43,7 @@ services:
     restart: on-failure
     ports:
       - "8081:8081"
+      - "7071:7071"
     volumes:
       - ./logging/member-app:/app/logs
     networks:
@@ -98,6 +99,7 @@ services:
       - instrument_net
     depends_on:
       - loki
+      - prometheus
   
   loki:
     image: grafana/loki:3.5.7
@@ -130,10 +132,29 @@ services:
       - instrument_net
     depends_on:
       - loki
+  
+  prometheus:
+    image: prom/prometheus:v3.7.2
+    container_name: prometheus
+    restart: on-failure
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.listen-address=:9090'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./scripts/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - instrument_net
 
 volumes:
   postgres_data:
   grafana_data:
+  prometheus_data:
 
 networks:
   instrument_net:

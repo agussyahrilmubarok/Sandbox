@@ -3,7 +3,11 @@
     "name": "booking-app",
     "host": "localhost",
     "port": 8080,
-    "env": "development"
+    "env": "development",
+    "metric": {
+      "host": "localhost",
+      "port": 7070
+    }
   },
   "postgres": {
     "host": "localhost",

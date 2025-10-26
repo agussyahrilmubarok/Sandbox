@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"example.com/booking/internal/metrics"
 	"example.com/booking/pkg/exception"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
@@ -32,12 +33,14 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 
 	memberResp, err := s.client.FindMemberByCode(ctx, request.MemberCode)
 	if err != nil {
+		metrics.FailedBookings.Inc()
 		log.Error().Err(err).Str("member_code", request.MemberCode).Msg("Failed to find member")
 		return nil, exception.NewNotFound("Member not found", err)
 	}
 
 	courseResp, err := s.client.ReserveCourseByCode(ctx, request.CourseCode)
 	if err != nil {
+		metrics.FailedBookings.Inc()
 		log.Error().Err(err).Str("course_code", request.CourseCode).Msg("Failed to reserve course")
 		return nil, exception.NewNotFound("Failed to reserve course", err)
 	}
@@ -55,6 +58,7 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 	}
 
 	if err := s.store.Save(ctx, booking); err != nil {
+		metrics.FailedBookings.Inc()
 		log.Error().Err(err).Str("booking_id", booking.ID).Msg("Failed to save booking, releasing course")
 		if _, releaseErr := s.client.ReleaseCourseByCode(ctx, request.CourseCode); releaseErr != nil {
 			log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
@@ -62,6 +66,9 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 
 		return nil, exception.NewInternal("Failed to save booking", err)
 	}
+
+	metrics.SuccessfulBookings.Inc()
+	metrics.BookingStatus.WithLabelValues(BookingStatusConfirmed.String()).Inc()
 
 	log.Info().Str("booking_id", booking.ID).Str("member_code", memberResp.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created")
 	return booking, nil
@@ -96,11 +103,13 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 		select {
 		case m := <-memberCh:
 			if m.err != nil {
+				metrics.FailedBookings.Inc()
 				return nil, exception.NewNotFound("Member not found", m.err)
 			}
 			memberRes = m.member
 		case c := <-courseCh:
 			if c.err != nil {
+				metrics.FailedBookings.Inc()
 				return nil, exception.NewNotFound("Failed to reserve course", c.err)
 			}
 			// courseRes = c.course
@@ -121,12 +130,16 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 	}
 
 	if err := s.store.Save(ctx, booking); err != nil {
+		metrics.FailedBookings.Inc()
 		log.Error().Err(err).Str("booking_id", booking.ID).Msg("Failed to save booking, releasing course")
 		if _, releaseErr := s.client.ReleaseCourseByCode(ctx, request.CourseCode); releaseErr != nil {
 			log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
 		}
 		return nil, exception.NewInternal("Failed to save booking", err)
 	}
+
+	metrics.SuccessfulBookings.Inc()
+	metrics.BookingStatus.WithLabelValues(BookingStatusConfirmed.String()).Inc()
 
 	log.Info().Str("booking_id", booking.ID).Str("member_code", memberRes.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created (V2)")
 	return booking, nil

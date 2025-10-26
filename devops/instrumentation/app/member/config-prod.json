@@ -3,7 +3,11 @@
     "name": "member-app",
     "host": "member-app",
     "port": 8081,
-    "env": "production"
+    "env": "production",
+    "metric": {
+      "host": "member-app",
+      "port": 7071
+    }
   },
   "postgres": {
     "host": "postgres",

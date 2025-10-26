@@ -15,10 +15,14 @@ import (
 
 type Config struct {
 	App struct {
-		Name string `mapstructure:"name"`
-		Host string `mapstructure:"host"`
-		Port int    `mapstructure:"port"`
-		Env  string `mapstructure:"env"`
+		Name   string `mapstructure:"name"`
+		Host   string `mapstructure:"host"`
+		Port   int    `mapstructure:"port"`
+		Env    string `mapstructure:"env"`
+		Metric struct {
+			Host string `mapstructure:"host"`
+			Port int    `mapstructure:"port"`
+		} `json:"metric"`
 	} `json:"app"`
 
 	Postgres struct {

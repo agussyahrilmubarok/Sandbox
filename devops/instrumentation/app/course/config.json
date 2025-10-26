@@ -3,7 +3,11 @@
     "name": "course-app",
     "host": "localhost",
     "port": 8082,
-    "env": "development"
+    "env": "development",
+    "metric": {
+      "host": "localhost",
+      "port": 7072
+    }
   },
   "postgres": {
     "host": "localhost",

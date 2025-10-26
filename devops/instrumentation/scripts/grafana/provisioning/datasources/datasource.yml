@@ -10,3 +10,13 @@ datasources:
     editable: false
     orgId: 1
     version: 1
+
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    basicAuth: false
+    isDefault: false  
+    editable: false   
+    orgId: 1
+    version: 1
