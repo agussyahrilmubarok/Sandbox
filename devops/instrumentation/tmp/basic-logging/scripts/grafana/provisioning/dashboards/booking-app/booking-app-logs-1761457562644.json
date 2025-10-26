@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
   "panels": [
     {
@@ -57,12 +57,12 @@
           },
           "direction": "backward",
           "editorMode": "code",
-          "expr": "{app=\"course-app\"}",
+          "expr": "{service_name=\"booking-app\"}",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Course App Logs",
+      "title": "Booking App Logs",
       "type": "logs"
     }
   ],
@@ -78,7 +78,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "course-app-logs",
-  "uid": "adsm9gw",
+  "title": "booking-app-logs",
+  "uid": "adqpr4j",
   "version": 2
 }
