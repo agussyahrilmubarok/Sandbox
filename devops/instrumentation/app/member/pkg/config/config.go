@@ -11,6 +11,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 type Config struct {
@@ -46,6 +47,11 @@ type Config struct {
 		Address  string `mapstructure:"address"`
 		WaitTime string `mapstructure:"wait_time"` // Example: "15m", "1h"
 	}
+
+	OTEL struct {
+		Host string `mapstructure:"host"`
+		Port int    `mapstructure:"port"`
+	} `json:"otel"`
 }
 
 func NewConfig(filepath string) (*Config, error) {
@@ -82,6 +88,10 @@ func NewPostgres(cfg *Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
+	if err := db.Use(tracing.NewPlugin(tracing.WithoutMetrics())); err != nil {
+		return nil, err
+	}
+
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, err
@@ -90,7 +100,11 @@ func NewPostgres(cfg *Config) (*gorm.DB, error) {
 	// Connection pool settings
 	sqlDB.SetMaxOpenConns(cfg.Postgres.MaxOpenConns)
 	sqlDB.SetMaxIdleConns(cfg.Postgres.MaxIdleConns)
-	sqlDB.SetConnMaxLifetime(time.Duration(cfg.Postgres.MaxOpenConns))
+	d, err := time.ParseDuration(cfg.Postgres.ConnMaxLifetime)
+	if err != nil {
+		return nil, err
+	}
+	sqlDB.SetConnMaxLifetime(d)
 
 	return db, nil
 }

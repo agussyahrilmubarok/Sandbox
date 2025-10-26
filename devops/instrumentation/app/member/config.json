@@ -27,5 +27,9 @@
   "consul": {
     "address": "localhost:8500",
     "wait_time": "15m"
+  },
+  "otel": {
+    "host": "localhost",
+    "port": "4317"
   }
 }

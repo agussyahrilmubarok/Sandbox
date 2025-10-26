@@ -13,10 +13,11 @@ import (
 	"example.com/member/internal/logging"
 	"example.com/member/internal/member"
 	"example.com/member/internal/metrics"
+	"example.com/member/internal/tracing"
 	"example.com/member/pkg/config"
 	"example.com/member/pkg/discovery"
 	"example.com/member/pkg/discovery/consul"
-	"example.com/member/pkg/vm"
+	"go.opentelemetry.io/otel"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -96,21 +97,28 @@ func main() {
 		tickerChannel := ticker.C
 
 		for range tickerChannel {
-			vm.UpdateCPUUsage()
-			vm.UpdateMemoryUsage()
-			vm.UpdateDiskUsage()
+			metrics.UpdateCPUUsage()
+			metrics.UpdateMemoryUsage()
+			metrics.UpdateDiskUsage()
 		}
 	}()
 
-	store := member.NewStore(db)
-	service := member.NewService(store)
-	handler := member.NewHandler(service)
+	traceExporter := tracing.NewOTLPExporter(ctx, fmt.Sprintf("%s:%v", cfg.OTEL.Host, cfg.OTEL.Port))
+	shutdownTrace := tracing.InitTraceProvider(ctx, cfg.App.Name, traceExporter)
+	defer shutdownTrace(ctx)
+
+	tracer := otel.Tracer(cfg.App.Name)
+	store := member.NewStore(db, tracer)
+	service := member.NewService(store, tracer)
+	handler := member.NewHandler(service, tracer)
 
 	e := echo.New()
 	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(logging.RequestIDMiddleware(logger))
 	e.Use(metrics.PrometheusMiddleware)
+	e.Use(tracing.Middleware(cfg.App.Name))
+	e.Use(logging.TracingMiddleware(tracer))
 
 	api := e.Group("/api/v1/members")
 

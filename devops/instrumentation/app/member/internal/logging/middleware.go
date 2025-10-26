@@ -9,6 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/xid"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type ctxKeyRequestID struct{}
@@ -62,4 +65,29 @@ func GetRequestID(ctx context.Context) string {
 		return rid
 	}
 	return ""
+}
+
+func TracingMiddleware(tracer trace.Tracer) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ctx := c.Request().Context()
+
+			ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.HeaderCarrier(c.Request().Header))
+
+			ctx, span := tracer.Start(ctx, c.Request().Method+" "+c.Path())
+			defer span.End()
+
+			traceID := span.SpanContext().TraceID().String()
+			spanID := span.SpanContext().SpanID().String()
+			log := zerolog.Ctx(ctx).With().
+				Str("trace_id", traceID).
+				Str("span_id", spanID).
+				Logger()
+			ctx = log.WithContext(ctx)
+
+			c.SetRequest(c.Request().WithContext(ctx))
+
+			return next(c)
+		}
+	}
 }

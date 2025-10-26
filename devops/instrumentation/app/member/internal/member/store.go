@@ -4,6 +4,9 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/gorm"
 )
 
@@ -18,20 +21,27 @@ type IStore interface {
 }
 
 type store struct {
-	db *gorm.DB
+	db     *gorm.DB
+	tracer trace.Tracer
 }
 
-func NewStore(db *gorm.DB) IStore {
+func NewStore(db *gorm.DB, tracer trace.Tracer) IStore {
 	return &store{
-		db: db,
+		db:     db,
+		tracer: tracer,
 	}
 }
 
 func (s *store) FindAll(ctx context.Context) ([]Member, error) {
+	ctx, span := s.tracer.Start(ctx, "store.FindAll")
+	defer span.End()
+
 	log := zerolog.Ctx(ctx)
 
 	var members []Member
 	if err := s.db.WithContext(ctx).Find(&members).Error; err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Msg("Failed to find all members")
 		return nil, err
 	}
@@ -41,6 +51,10 @@ func (s *store) FindAll(ctx context.Context) ([]Member, error) {
 }
 
 func (s *store) FindByID(ctx context.Context, memberID string) (*Member, error) {
+	ctx, span := s.tracer.Start(ctx, "store.FindByID")
+	defer span.End()
+	span.SetAttributes(attribute.String("member.id", memberID))
+
 	log := zerolog.Ctx(ctx)
 
 	var m Member
@@ -49,6 +63,8 @@ func (s *store) FindByID(ctx context.Context, memberID string) (*Member, error) 
 			log.Warn().Str("member_id", memberID).Msg("Member not found")
 			return nil, nil
 		}
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("member_id", memberID).Msg("Failed to find member by ID")
 		return nil, err
 	}
@@ -58,6 +74,10 @@ func (s *store) FindByID(ctx context.Context, memberID string) (*Member, error) 
 }
 
 func (s *store) FindByCode(ctx context.Context, memberCode string) (*Member, error) {
+	ctx, span := s.tracer.Start(ctx, "store.FindByCode")
+	defer span.End()
+	span.SetAttributes(attribute.String("member.code", memberCode))
+
 	log := zerolog.Ctx(ctx)
 
 	var m Member
@@ -66,6 +86,8 @@ func (s *store) FindByCode(ctx context.Context, memberCode string) (*Member, err
 			log.Warn().Str("member_code", memberCode).Msg("Member not found")
 			return nil, nil
 		}
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to find member by Code")
 		return nil, err
 	}
@@ -75,6 +97,10 @@ func (s *store) FindByCode(ctx context.Context, memberCode string) (*Member, err
 }
 
 func (s *store) FindByEmail(ctx context.Context, memberEmail string) (*Member, error) {
+	ctx, span := s.tracer.Start(ctx, "store.FindByEmail")
+	defer span.End()
+	span.SetAttributes(attribute.String("member.email", memberEmail))
+
 	log := zerolog.Ctx(ctx)
 
 	var m Member
@@ -83,6 +109,8 @@ func (s *store) FindByEmail(ctx context.Context, memberEmail string) (*Member, e
 			log.Warn().Str("member_email", memberEmail).Msg("Member not found")
 			return nil, nil
 		}
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("member_email", memberEmail).Msg("Failed to find member by Email")
 		return nil, err
 	}
@@ -92,9 +120,15 @@ func (s *store) FindByEmail(ctx context.Context, memberEmail string) (*Member, e
 }
 
 func (s *store) Save(ctx context.Context, member *Member) error {
+	ctx, span := s.tracer.Start(ctx, "store.Save")
+	defer span.End()
+	span.SetAttributes(attribute.String("member.id", member.ID))
+
 	log := zerolog.Ctx(ctx)
 
 	if err := s.db.WithContext(ctx).Save(member).Error; err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("member_id", member.ID).Msg("Failed to save member")
 		return err
 	}
@@ -104,9 +138,15 @@ func (s *store) Save(ctx context.Context, member *Member) error {
 }
 
 func (s *store) DeleteByID(ctx context.Context, memberID string) error {
+	ctx, span := s.tracer.Start(ctx, "store.DeleteByID")
+	defer span.End()
+	span.SetAttributes(attribute.String("member.id", memberID))
+
 	log := zerolog.Ctx(ctx)
 
 	if err := s.db.WithContext(ctx).Delete(&Member{}, "id = ?", memberID).Error; err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("member_id", memberID).Msg("Failed to delete member")
 		return err
 	}
