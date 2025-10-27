@@ -38,7 +38,7 @@ func init() {
 	prometheus.MustRegister(RequestDuration)
 }
 
-func PrometheusMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+func MetricAppMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		start := time.Now()
 		err := next(c)

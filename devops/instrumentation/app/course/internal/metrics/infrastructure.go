@@ -1,7 +1,12 @@
 package metrics
 
 import (
+	"fmt"
+
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/mem"
 )
 
 var (
@@ -39,4 +44,33 @@ func init() {
 	prometheus.MustRegister(CPUUsage)
 	prometheus.MustRegister(MemoryUsage)
 	prometheus.MustRegister(DiskUsage)
+}
+
+func UpdateCPUUsage() {
+	percent, err := cpu.Percent(0, true)
+	if err != nil {
+		return
+	}
+
+	for i, usage := range percent {
+		CPUUsage.With(prometheus.Labels{"core": fmt.Sprintf("%d", i)}).Set(usage)
+	}
+}
+
+func UpdateMemoryUsage() {
+	vmStat, err := mem.VirtualMemory()
+	if err != nil {
+		return
+	}
+
+	MemoryUsage.With(prometheus.Labels{"type": "ram"}).Set(float64(vmStat.Used))
+}
+
+func UpdateDiskUsage() {
+	usage, err := disk.Usage("/")
+	if err != nil {
+		return
+	}
+
+	DiskUsage.With(prometheus.Labels{"disk": "/"}).Set(float64(usage.Used))
 }

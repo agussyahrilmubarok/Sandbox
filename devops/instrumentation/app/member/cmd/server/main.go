@@ -108,6 +108,7 @@ func main() {
 	defer shutdownTrace(ctx)
 
 	tracer := otel.Tracer(cfg.App.Name)
+
 	store := member.NewStore(db, tracer)
 	service := member.NewService(store, tracer)
 	handler := member.NewHandler(service, tracer)
@@ -116,9 +117,9 @@ func main() {
 	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(logging.RequestIDMiddleware(logger))
-	e.Use(metrics.PrometheusMiddleware)
+	e.Use(metrics.MetricAppMiddleware)
 	e.Use(tracing.Middleware(cfg.App.Name))
-	e.Use(logging.TracingMiddleware(tracer))
+	e.Use(logging.TraceIDMiddleware(tracer))
 
 	api := e.Group("/api/v1/members")
 

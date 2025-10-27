@@ -67,7 +67,7 @@ func GetRequestID(ctx context.Context) string {
 	return ""
 }
 
-func TracingMiddleware(tracer trace.Tracer) echo.MiddlewareFunc {
+func TraceIDMiddleware(tracer trace.Tracer) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
@@ -78,11 +78,11 @@ func TracingMiddleware(tracer trace.Tracer) echo.MiddlewareFunc {
 			defer span.End()
 
 			traceID := span.SpanContext().TraceID().String()
-			spanID := span.SpanContext().SpanID().String()
+
 			log := zerolog.Ctx(ctx).With().
 				Str("trace_id", traceID).
-				Str("span_id", spanID).
 				Logger()
+
 			ctx = log.WithContext(ctx)
 
 			c.SetRequest(c.Request().WithContext(ctx))

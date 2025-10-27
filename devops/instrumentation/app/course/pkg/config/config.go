@@ -46,6 +46,11 @@ type Config struct {
 		Address  string `mapstructure:"address"`
 		WaitTime string `mapstructure:"wait_time"` // Example: "15m", "1h"
 	}
+
+	OTEL struct {
+		Host string `mapstructure:"host"`
+		Port int    `mapstructure:"port"`
+	} `json:"otel"`
 }
 
 func NewConfig(filepath string) (*Config, error) {

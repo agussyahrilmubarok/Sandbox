@@ -138,6 +138,7 @@ func (s *service) Save(ctx context.Context, member *Member) (*Member, error) {
 	}
 
 	metrics.TotalMembers.Inc()
+
 	log.Info().Str("member_id", member.ID).Msg("Member saved successfully")
 	return member, nil
 }
@@ -157,6 +158,7 @@ func (s *service) DeleteByID(ctx context.Context, memberID string) error {
 	}
 
 	metrics.TotalMembers.Dec()
+
 	log.Info().Str("member_id", memberID).Msg("Member deleted successfully")
 	return nil
 }

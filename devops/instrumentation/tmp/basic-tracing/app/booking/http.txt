@@ -1,0 +1,26 @@
+curl -X 'DELETE' \
+'http://localhost:8081/api/v1/members/clean-dummy' \
+-H 'accept: application/json'
+
+curl -X 'DELETE' \
+'http://localhost:8082/api/v1/courses/clean-dummy' \
+-H 'accept: application/json'
+
+curl -X 'POST' \
+'http://localhost:8081/api/v1/members/init-dummy' \
+-H 'accept: application/json' \
+-d ''
+
+curl -X 'POST' \
+'http://localhost:8082/api/v1/courses/init-dummy' \
+-H 'accept: application/json' \
+-d ''
+
+curl -X 'POST' \
+'http://localhost:8080/api/v2/booking/course' \
+-H 'accept: application/json' \
+-H 'Content-Type: application/json' \
+-d '{
+"course_code": "C-002",
+"member_code": "MC-1XX"
+}'
