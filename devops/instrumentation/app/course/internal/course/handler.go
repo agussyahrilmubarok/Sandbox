@@ -32,10 +32,11 @@ func NewHandler(service IService, tracer trace.Tracer) *Handler {
 // @Failure 500 {object} map[string]string
 // @Router /courses [get]
 func (h *Handler) FindAll(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.FindAll")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.FindAll")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.FindAll").Logger()
 
 	courses, err := h.service.FindAll(ctx)
 	if err != nil {
@@ -65,10 +66,11 @@ func (h *Handler) FindAll(c echo.Context) error {
 // @Failure 500 {object} map[string]string
 // @Router /courses/find [get]
 func (h *Handler) Find(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.Find")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.Find")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.Find").Logger()
 
 	courseCode := c.QueryParam("code")
 	if courseCode == "" {
@@ -103,10 +105,11 @@ func (h *Handler) Find(c echo.Context) error {
 // @Failure 500 {object} map[string]string
 // @Router /courses/reserve [post]
 func (h *Handler) ReserveCourse(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.ReserveCourse")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.ReserveCourse")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.ReserveCourse").Logger()
 
 	var payload CourseCodeRequest
 	if err := c.Bind(&payload); err != nil {
@@ -142,10 +145,11 @@ func (h *Handler) ReserveCourse(c echo.Context) error {
 // @Failure 500 {object} map[string]string
 // @Router /courses/release [post]
 func (h *Handler) ReleaseCourse(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.ReleaseCourse")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.ReleaseCourse")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.ReleaseCourse").Logger()
 
 	var payload CourseCodeRequest
 	if err := c.Bind(&payload); err != nil {
@@ -178,16 +182,17 @@ func (h *Handler) ReleaseCourse(c echo.Context) error {
 // @Success 200 {array} Course
 // @Router /courses/init-dummy [post]
 func (h *Handler) InitDummy(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.InitDummy")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.InitDummy")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.InitDummy").Logger()
 
 	dummies := []Course{
 		// available start_date, end_date and seat.
 		{
 			ID:            uuid.New().String(),
-			Code:          "C-001",
+			Code:          "COURSE-001",
 			Name:          "Go Programming Basics",
 			Price:         199.99,
 			StartDate:     time.Now(),                         // Starts now
@@ -197,7 +202,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 		// available start_date, end_date, but not seat.
 		{
 			ID:            uuid.New().String(),
-			Code:          "C-002",
+			Code:          "COURSE-002",
 			Name:          "Advanced Golang",
 			Price:         249.99,
 			StartDate:     time.Now().Add(1 * time.Hour),      // Starts now + 1 hour
@@ -206,7 +211,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 		},
 		{
 			ID:            uuid.New().String(),
-			Code:          "C-003",
+			Code:          "COURSE-003",
 			Name:          "Docker for Beginners",
 			Price:         149.99,
 			StartDate:     time.Now().Add(-24 * time.Hour),    // Started yesterday
@@ -216,7 +221,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 		// not available start_date, end_date, but available seat.
 		{
 			ID:            uuid.New().String(),
-			Code:          "C-004",
+			Code:          "COURSE-004",
 			Name:          "Kubernetes Mastery",
 			Price:         299.99,
 			StartDate:     time.Now().Add(-7 * 24 * time.Hour), // Started 7 days ago
@@ -225,7 +230,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 		},
 		{
 			ID:            uuid.New().String(),
-			Code:          "C-005",
+			Code:          "COURSE-005",
 			Name:          "Machine Learning Fundamentals",
 			Price:         399.99,
 			StartDate:     time.Now().Add(-2 * 24 * time.Hour), // Started 2 days ago
@@ -238,6 +243,12 @@ func (h *Handler) InitDummy(c echo.Context) error {
 		if err := h.service.Save(ctx, &course); err != nil {
 			span.RecordError(err)
 			log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to insert dummy course")
+			if httpErr, ok := err.(*exception.Http); ok {
+				return c.JSON(httpErr.Code, map[string]string{
+					"error": httpErr.Message,
+				})
+			}
+			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to insert dummy course"})
 		}
 	}
 
@@ -254,10 +265,11 @@ func (h *Handler) InitDummy(c echo.Context) error {
 // @Failure 500 {object} map[string]string
 // @Router /courses/clean-dummy [delete]
 func (h *Handler) CleanDummy(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.CleanDummy")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.CleanDummy")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.CleanDummy").Logger()
 
 	courses, err := h.service.FindAll(ctx)
 	if err != nil {
@@ -270,6 +282,12 @@ func (h *Handler) CleanDummy(c echo.Context) error {
 		if err := h.service.DeleteByID(ctx, course.ID); err != nil {
 			span.RecordError(err)
 			log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to delete dummy course")
+			if httpErr, ok := err.(*exception.Http); ok {
+				return c.JSON(httpErr.Code, map[string]string{
+					"error": httpErr.Message,
+				})
+			}
+			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to delete dummy course"})
 		}
 	}
 

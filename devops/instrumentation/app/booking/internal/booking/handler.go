@@ -33,10 +33,11 @@ func NewHandler(service IService, tracer trace.Tracer) *Handler {
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Router /api/v1/booking/course [post]
 func (h *Handler) Booking(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.Booking")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.Booking")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.Booking").Logger()
 
 	var payload BookingRequest
 	if err := c.Bind(&payload); err != nil {
@@ -83,10 +84,11 @@ func (h *Handler) Booking(c echo.Context) error {
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Router /api/v2/booking/course [post]
 func (h *Handler) BookingV2(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.BookingV2")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.BookingV2")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.BookingV2").Logger()
 
 	var payload BookingRequest
 	if err := c.Bind(&payload); err != nil {

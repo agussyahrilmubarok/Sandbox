@@ -2,7 +2,7 @@ server/dev:
 	go run cmd/server/main.go --config=config.json
 
 server/build:
-	rm -R build/
+	rm -rf build/
 	go build -o build/member-app cmd/server/main.go
 
 swagger/install:

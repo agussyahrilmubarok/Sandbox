@@ -39,7 +39,7 @@ func (s *service) FindAll(ctx context.Context) ([]Course, error) {
 	ctx, span := s.tracer.Start(ctx, "service.FindAll")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.FindAll").Logger()
 
 	courses, err := s.store.FindAll(ctx)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *service) FindByID(ctx context.Context, courseID string) (*Course, error
 	defer span.End()
 	span.SetAttributes(attribute.String("course.id", courseID))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.FindByID").Logger()
 
 	course, err := s.store.FindByID(ctx, courseID)
 	if err != nil {
@@ -94,7 +94,7 @@ func (s *service) FindByCode(ctx context.Context, courseCode string) (*Course, e
 	defer span.End()
 	span.SetAttributes(attribute.String("course.code", courseCode))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.FindByCode").Logger()
 
 	course, err := s.store.FindByCode(ctx, courseCode)
 	if err != nil {
@@ -118,7 +118,7 @@ func (s *service) Save(ctx context.Context, course *Course) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("course.id", course.ID), attribute.String("course.code", course.Code))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.Save").Logger()
 
 	err := s.store.Save(ctx, course)
 	if err != nil {
@@ -139,7 +139,7 @@ func (s *service) DeleteByID(ctx context.Context, courseID string) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("course.id", courseID))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.DeleteByID").Logger()
 
 	err := s.store.DeleteByID(ctx, courseID)
 	if err != nil {
@@ -160,7 +160,7 @@ func (s *service) ReserveByCode(ctx context.Context, courseCode string) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("course.code", courseCode))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.ReserveByCode").Logger()
 
 	course, err := s.store.FindByCode(ctx, courseCode)
 	if err != nil {
@@ -211,7 +211,7 @@ func (s *service) ReleaseByCode(ctx context.Context, courseCode string) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("course.code", courseCode))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.ReleaseByCode").Logger()
 
 	course, err := s.store.FindByCode(ctx, courseCode)
 	if err != nil {

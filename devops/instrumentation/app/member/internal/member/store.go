@@ -36,7 +36,7 @@ func (s *store) FindAll(ctx context.Context) ([]Member, error) {
 	ctx, span := s.tracer.Start(ctx, "store.FindAll")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.FindAll").Logger()
 
 	var members []Member
 	if err := s.db.WithContext(ctx).Find(&members).Error; err != nil {
@@ -55,7 +55,7 @@ func (s *store) FindByID(ctx context.Context, memberID string) (*Member, error) 
 	defer span.End()
 	span.SetAttributes(attribute.String("member.id", memberID))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.FindByID").Logger()
 
 	var m Member
 	if err := s.db.WithContext(ctx).First(&m, "id = ?", memberID).Error; err != nil {
@@ -78,7 +78,7 @@ func (s *store) FindByCode(ctx context.Context, memberCode string) (*Member, err
 	defer span.End()
 	span.SetAttributes(attribute.String("member.code", memberCode))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.FindByCode").Logger()
 
 	var m Member
 	if err := s.db.WithContext(ctx).First(&m, "code = ?", memberCode).Error; err != nil {
@@ -101,7 +101,7 @@ func (s *store) FindByEmail(ctx context.Context, memberEmail string) (*Member, e
 	defer span.End()
 	span.SetAttributes(attribute.String("member.email", memberEmail))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.FindByEmail").Logger()
 
 	var m Member
 	if err := s.db.WithContext(ctx).First(&m, "email = ?", memberEmail).Error; err != nil {
@@ -124,7 +124,7 @@ func (s *store) Save(ctx context.Context, member *Member) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("member.id", member.ID))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.Save").Logger()
 
 	if err := s.db.WithContext(ctx).Save(member).Error; err != nil {
 		span.RecordError(err)
@@ -142,7 +142,7 @@ func (s *store) DeleteByID(ctx context.Context, memberID string) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("member.id", memberID))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.DeleteByID").Logger()
 
 	if err := s.db.WithContext(ctx).Delete(&Member{}, "id = ?", memberID).Error; err != nil {
 		span.RecordError(err)

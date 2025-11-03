@@ -42,7 +42,7 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 		attribute.String("course.code", request.CourseCode),
 	)
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.Booking").Logger()
 
 	memberResp, err := s.client.FindMemberByCode(ctx, request.MemberCode)
 	if err != nil {
@@ -68,7 +68,7 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 		MemberCode:  memberResp.Code,
 		CourseCode:  request.CourseCode,
 		BookingDate: time.Now(),
-		Status:      BookingStatusConfirmed,
+		Status:      BookingStatusPending,
 		Notes:       fmt.Sprintf("Booking Course %s by %s", request.CourseCode, request.MemberCode),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -87,7 +87,7 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 	}
 
 	metrics.SuccessfulBookings.Inc()
-	metrics.BookingStatus.WithLabelValues(BookingStatusConfirmed.String()).Inc()
+	metrics.BookingStatus.WithLabelValues(BookingStatusPending.String()).Inc()
 
 	log.Info().Str("booking_id", booking.ID).Str("member_code", memberResp.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created")
 	return booking, nil
@@ -101,7 +101,7 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 		attribute.String("course.code", request.CourseCode),
 	)
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "service.BookingV2").Logger()
 
 	type result struct {
 		member *MemberServiceMemberResponse
@@ -168,7 +168,7 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 		MemberCode:  memberRes.Code,
 		CourseCode:  request.CourseCode,
 		BookingDate: time.Now(),
-		Status:      BookingStatusConfirmed,
+		Status:      BookingStatusPending,
 		Notes:       fmt.Sprintf("Booking Course %s by %s", request.CourseCode, request.MemberCode),
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
@@ -186,7 +186,7 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 	}
 
 	metrics.SuccessfulBookings.Inc()
-	metrics.BookingStatus.WithLabelValues(BookingStatusConfirmed.String()).Inc()
+	metrics.BookingStatus.WithLabelValues(BookingStatusPending.String()).Inc()
 
 	log.Info().Str("booking_id", booking.ID).Str("member_code", memberRes.Code).Str("course_code", request.CourseCode).Msg("Booking successfully created (V2)")
 	return booking, nil

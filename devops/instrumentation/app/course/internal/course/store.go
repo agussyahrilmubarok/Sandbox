@@ -35,7 +35,7 @@ func (s *store) FindAll(ctx context.Context) ([]Course, error) {
 	ctx, span := s.tracer.Start(ctx, "store.FindAll")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.FindAll").Logger()
 
 	var courses []Course
 	if err := s.db.WithContext(ctx).Find(&courses).Error; err != nil {
@@ -54,7 +54,7 @@ func (s *store) FindByID(ctx context.Context, courseID string) (*Course, error) 
 	defer span.End()
 	span.SetAttributes(attribute.String("course.id", courseID))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.FindByID").Logger()
 
 	var course Course
 	if err := s.db.WithContext(ctx).First(&course, "id = ?", courseID).Error; err != nil {
@@ -77,7 +77,7 @@ func (s *store) FindByCode(ctx context.Context, courseCode string) (*Course, err
 	defer span.End()
 	span.SetAttributes(attribute.String("course.code", courseCode))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.FindByCode").Logger()
 
 	var course Course
 	if err := s.db.WithContext(ctx).First(&course, "code = ?", courseCode).Error; err != nil {
@@ -100,7 +100,7 @@ func (s *store) Save(ctx context.Context, course *Course) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("course.id", course.ID), attribute.String("course.code", course.Code))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.Save").Logger()
 
 	log.Info().Str("course_id", course.ID).Str("course_code", course.Code).Int("seat_available_before", course.SeatAvailable).Msg("Saving course")
 
@@ -120,7 +120,7 @@ func (s *store) DeleteByID(ctx context.Context, courseID string) error {
 	defer span.End()
 	span.SetAttributes(attribute.String("course.id", courseID))
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "store.DeleteByID").Logger()
 
 	if err := s.db.WithContext(ctx).Delete(&Course{}, "id = ?", courseID).Error; err != nil {
 		span.RecordError(err)

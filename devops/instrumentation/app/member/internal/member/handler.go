@@ -1,7 +1,6 @@
 package member
 
 import (
-	"context"
 	"net/http"
 
 	"example.com/member/pkg/exception"
@@ -32,10 +31,11 @@ func NewHandler(service IService, tracer trace.Tracer) *Handler {
 // @Failure 500 {object} map[string]string
 // @Router /members [get]
 func (h *Handler) FindAll(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.FindAll")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.FindAll")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.FindAll").Logger()
 
 	members, err := h.service.FindAll(ctx)
 	if err != nil {
@@ -63,10 +63,11 @@ func (h *Handler) FindAll(c echo.Context) error {
 // @Failure 500 {object} map[string]string
 // @Router /members/find [get]
 func (h *Handler) Find(c echo.Context) error {
-	ctx, span := h.tracer.Start(c.Request().Context(), "handler.Find")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.Find")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.Find").Logger()
 
 	memberCode := c.QueryParam("code")
 	if memberCode == "" {
@@ -96,20 +97,26 @@ func (h *Handler) Find(c echo.Context) error {
 // @Failure 500 {object} map[string]string
 // @Router /members/init-dummy [post]
 func (h *Handler) InitDummy(c echo.Context) error {
-	ctx, span := h.tracer.Start(context.Background(), "handler.InitDummy")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.InitDummy")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.InitDummy").Logger()
 
 	dummies := []*Member{
-		{ID: uuid.New().String(), Code: "MC-1XX", Name: "John Doe", Email: "johndoe@mail.com"},
-		{ID: uuid.New().String(), Code: "MC-2XX", Name: "Jane Smith", Email: "janesmith@mail.com"},
+		{ID: uuid.New().String(), Code: "MEMBER-1000", Name: "John Doe", Email: "johndoe@mail.com"},
+		{ID: uuid.New().String(), Code: "MEMBER-1001", Name: "Jane Smith", Email: "janesmith@mail.com"},
 	}
 
 	for _, m := range dummies {
 		if _, err := h.service.Save(ctx, m); err != nil {
 			span.RecordError(err)
 			log.Error().Err(err).Str("member_id", m.ID).Msg("Failed to insert dummy member")
+			if httpErr, ok := err.(*exception.Http); ok {
+				return c.JSON(httpErr.Code, map[string]string{
+					"error": httpErr.Message,
+				})
+			}
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to insert dummy member"})
 		}
 	}
@@ -127,10 +134,11 @@ func (h *Handler) InitDummy(c echo.Context) error {
 // @Failure 500 {object} map[string]string
 // @Router /members/clean-dummy [delete]
 func (h *Handler) CleanDummy(c echo.Context) error {
-	ctx, span := h.tracer.Start(context.Background(), "handler.CleanDummy")
+	ctx := c.Request().Context()
+	ctx, span := h.tracer.Start(ctx, "handler.CleanDummy")
 	defer span.End()
 
-	log := zerolog.Ctx(ctx)
+	log := zerolog.Ctx(ctx).With().Str("component", "handler.CleanDummy").Logger()
 
 	members, err := h.service.FindAll(ctx)
 	if err != nil {
@@ -142,7 +150,12 @@ func (h *Handler) CleanDummy(c echo.Context) error {
 	for _, m := range members {
 		if err := h.service.DeleteByID(ctx, m.ID); err != nil {
 			span.RecordError(err)
-			log.Error().Err(err).Str("member_id", m.ID).Msg("Failed to delete dummy member")
+			log.Error().Err(err).Str("member_id", m.ID).Str("member_code", m.Code).Msg("Failed to delete dummy member")
+			if httpErr, ok := err.(*exception.Http); ok {
+				return c.JSON(httpErr.Code, map[string]string{
+					"error": httpErr.Message,
+				})
+			}
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to delete dummy member"})
 		}
 	}
