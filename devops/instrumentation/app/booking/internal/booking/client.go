@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"example.com/booking/internal/logging"
-	"example.com/booking/pkg/discovery/consul"
+	"github.com/agussyahrilmubarok/gohelp/discovery/consul"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"

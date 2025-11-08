@@ -15,8 +15,9 @@ import (
 	"example.com/member/internal/metrics"
 	"example.com/member/internal/tracing"
 	"example.com/member/pkg/config"
-	"example.com/member/pkg/discovery"
-	"example.com/member/pkg/discovery/consul"
+	viperconfig "github.com/agussyahrilmubarok/gohelp/config/viper"
+	"github.com/agussyahrilmubarok/gohelp/discovery"
+	"github.com/agussyahrilmubarok/gohelp/discovery/consul"
 	"go.opentelemetry.io/otel"
 
 	"github.com/labstack/echo/v4"
@@ -44,8 +45,14 @@ func main() {
 	configFlag := flag.String("config", "configs/config.json", "Path to config file")
 	flag.Parse()
 
-	cfg, err := config.NewConfig(*configFlag)
+	vCfg, err := viperconfig.New(*configFlag)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
+		os.Exit(1)
+	}
+
+	var cfg *config.Config
+	if err := vCfg.Unmarshal(&cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
 		os.Exit(1)
 	}

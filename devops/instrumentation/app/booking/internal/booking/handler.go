@@ -3,7 +3,7 @@ package booking
 import (
 	"net/http"
 
-	"example.com/booking/pkg/exception"
+	"github.com/agussyahrilmubarok/gohelp/exception"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"

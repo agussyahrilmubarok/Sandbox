@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -52,22 +51,6 @@ type Config struct {
 		Host string `mapstructure:"host"`
 		Port int    `mapstructure:"port"`
 	} `json:"otel"`
-}
-
-func NewConfig(filepath string) (*Config, error) {
-	v := viper.New()
-	v.SetConfigFile(filepath)
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, err
-	}
-
-	var cfg Config
-	if err := v.Unmarshal(&cfg); err != nil {
-		return nil, err
-	}
-
-	return &cfg, nil
 }
 
 func NewPostgres(cfg *Config) (*gorm.DB, error) {

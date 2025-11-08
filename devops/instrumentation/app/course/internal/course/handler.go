@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"example.com/course/pkg/exception"
+	"github.com/agussyahrilmubarok/gohelp/exception"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"

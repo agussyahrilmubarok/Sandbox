@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"example.com/booking/internal/metrics"
-	"example.com/booking/pkg/exception"
+	"github.com/agussyahrilmubarok/gohelp/exception"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
@@ -50,7 +50,7 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 		span.SetStatus(codes.Error, err.Error())
 		metrics.FailedBookings.Inc()
 		log.Error().Err(err).Str("member_code", request.MemberCode).Msg("Failed to find member")
-		return nil, exception.NewNotFound("Member not found", err)
+		return nil, exception.NewHTTPNotFound("Member not found", err)
 	}
 
 	courseResp, err := s.client.ReserveCourseByCode(ctx, request.CourseCode)
@@ -59,7 +59,7 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 		span.SetStatus(codes.Error, err.Error())
 		metrics.FailedBookings.Inc()
 		log.Error().Err(err).Str("course_code", request.CourseCode).Msg("Failed to reserve course")
-		return nil, exception.NewNotFound("Failed to reserve course", err)
+		return nil, exception.NewHTTPNotFound("Failed to reserve course", err)
 	}
 	log.Info().Str("course_code", request.CourseCode).Msg("Course reserved: " + courseResp.Message)
 
@@ -83,7 +83,7 @@ func (s *service) Booking(ctx context.Context, request BookingRequest) (*Booking
 			log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
 		}
 
-		return nil, exception.NewInternal("Failed to save booking", err)
+		return nil, exception.NewHTTPInternal("Failed to save booking", err)
 	}
 
 	metrics.SuccessfulBookings.Inc()
@@ -144,7 +144,7 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 				span.RecordError(m.err)
 				span.SetStatus(codes.Error, m.err.Error())
 				metrics.FailedBookings.Inc()
-				return nil, exception.NewNotFound("Member not found", m.err)
+				return nil, exception.NewHTTPNotFound("Member not found", m.err)
 			}
 			memberRes = m.member
 		case c := <-courseCh:
@@ -152,11 +152,11 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 				span.RecordError(c.err)
 				span.SetStatus(codes.Error, c.err.Error())
 				metrics.FailedBookings.Inc()
-				return nil, exception.NewNotFound("Failed to reserve course", c.err)
+				return nil, exception.NewHTTPNotFound("Failed to reserve course", c.err)
 			}
 			// courseRes = c.course
 		case <-ctx.Done():
-			err := exception.NewRequestTimeout("Context cancelled or timed out", nil)
+			err := exception.NewHTTPRequestTimeout("Context cancelled or timed out", nil)
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			return nil, err
@@ -182,7 +182,7 @@ func (s *service) BookingV2(ctx context.Context, request BookingRequest) (*Booki
 		if _, releaseErr := s.client.ReleaseCourseByCode(ctx, request.CourseCode); releaseErr != nil {
 			log.Error().Err(releaseErr).Str("course_code", request.CourseCode).Msg("Failed to release course after save failure")
 		}
-		return nil, exception.NewInternal("Failed to save booking", err)
+		return nil, exception.NewHTTPInternal("Failed to save booking", err)
 	}
 
 	metrics.SuccessfulBookings.Inc()

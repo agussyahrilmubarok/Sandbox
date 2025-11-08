@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"example.com/course/internal/metrics"
-	"example.com/course/pkg/exception"
+	"github.com/agussyahrilmubarok/gohelp/exception"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -46,7 +46,7 @@ func (s *service) FindAll(ctx context.Context) ([]Course, error) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Msg("Failed to fetch all courses from store")
-		return nil, exception.NewNotFound("Failed to fetch all courses", err)
+		return nil, exception.NewHTTPNotFound("Failed to fetch all courses", err)
 	}
 
 	metrics.TotalCourses.Set(float64(len(courses)))
@@ -77,12 +77,12 @@ func (s *service) FindByID(ctx context.Context, courseID string) (*Course, error
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("course_id", courseID).Msg("Failed to find course by ID")
-		return nil, exception.NewNotFound("Course not found", err)
+		return nil, exception.NewHTTPNotFound("Course not found", err)
 	}
 
 	if course == nil {
 		log.Warn().Str("course_id", courseID).Msg("Course not found")
-		return nil, exception.NewNotFound("Course not found", nil)
+		return nil, exception.NewHTTPNotFound("Course not found", nil)
 	}
 
 	log.Info().Str("course_id", courseID).Msg("Successfully found course by ID")
@@ -101,12 +101,12 @@ func (s *service) FindByCode(ctx context.Context, courseCode string) (*Course, e
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to find course by code")
-		return nil, exception.NewNotFound("Course not found", err)
+		return nil, exception.NewHTTPNotFound("Course not found", err)
 	}
 
 	if course == nil {
 		log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return nil, exception.NewNotFound("Course not found", nil)
+		return nil, exception.NewHTTPNotFound("Course not found", nil)
 	}
 
 	log.Info().Str("course_code", courseCode).Msg("Successfully found course by code")
@@ -167,17 +167,17 @@ func (s *service) ReserveByCode(ctx context.Context, courseCode string) error {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to find course by code")
-		return exception.NewNotFound("Course not found", err)
+		return exception.NewHTTPNotFound("Course not found", err)
 	}
 
 	if course == nil {
 		log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return exception.NewNotFound("Course not found", nil)
+		return exception.NewHTTPNotFound("Course not found", nil)
 	}
 
 	currentTime := time.Now()
 	if currentTime.After(course.EndDate) {
-		err := exception.NewBadRequest("Course has already ended", nil)
+		err := exception.NewHTTPBadRequest("Course has already ended", nil)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Warn().Str("course_code", courseCode).Msg("Course has already ended, cannot reserve seat")
@@ -185,7 +185,7 @@ func (s *service) ReserveByCode(ctx context.Context, courseCode string) error {
 	}
 
 	if course.SeatAvailable <= 0 {
-		err := exception.NewBadRequest("No available seats to reserve", nil)
+		err := exception.NewHTTPBadRequest("No available seats to reserve", nil)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Warn().Str("course_code", courseCode).Msg("No available seats to reserve")
@@ -218,17 +218,17 @@ func (s *service) ReleaseByCode(ctx context.Context, courseCode string) error {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to find course by code")
-		return exception.NewNotFound("Course not found", err)
+		return exception.NewHTTPNotFound("Course not found", err)
 	}
 
 	if course == nil {
 		log.Warn().Str("course_code", courseCode).Msg("Course not found")
-		return exception.NewNotFound("Course not found", nil)
+		return exception.NewHTTPNotFound("Course not found", nil)
 	}
 
 	currentTime := time.Now()
 	if currentTime.After(course.EndDate) {
-		err := exception.NewBadRequest("Course has already ended", nil)
+		err := exception.NewHTTPBadRequest("Course has already ended", nil)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Warn().Str("course_code", courseCode).Msg("Course has already ended, cannot release seat")

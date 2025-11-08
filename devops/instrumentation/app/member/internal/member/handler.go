@@ -3,7 +3,7 @@ package member
 import (
 	"net/http"
 
-	"example.com/member/pkg/exception"
+	"github.com/agussyahrilmubarok/gohelp/exception"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"

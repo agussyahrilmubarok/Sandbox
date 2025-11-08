@@ -3,14 +3,13 @@ module example.com/booking
 go 1.25.3
 
 require (
+	github.com/agussyahrilmubarok/gohelp v0.0.0-20251108135247-88b0e737ca04
 	github.com/google/uuid v1.6.0
-	github.com/hashicorp/consul/api v1.32.4
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/prometheus/client_golang v1.4.0
 	github.com/rs/xid v1.6.0
 	github.com/rs/zerolog v1.34.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	github.com/spf13/viper v1.21.0
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.6
 	go.opentelemetry.io/otel v1.38.0
@@ -42,6 +41,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 // indirect
+	github.com/hashicorp/consul/api v1.33.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
@@ -72,6 +72,7 @@ require (
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
+	github.com/spf13/viper v1.21.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
