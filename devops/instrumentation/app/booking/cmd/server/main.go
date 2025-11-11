@@ -11,13 +11,15 @@ import (
 	"time"
 
 	"example.com/booking/internal/booking"
+	"example.com/booking/internal/config"
 	"example.com/booking/internal/logging"
 	"example.com/booking/internal/metrics"
 	"example.com/booking/internal/tracing"
-	"example.com/booking/pkg/config"
-	viperconfig "github.com/agussyahrilmubarok/gohelp/config/viper"
-	"github.com/agussyahrilmubarok/gohelp/discovery"
-	"github.com/agussyahrilmubarok/gohelp/discovery/consul"
+	"github.com/agussyahrilmubarok/gox/pkg/xconfig/xviper"
+	"github.com/agussyahrilmubarok/gox/pkg/xdiscovery"
+	"github.com/agussyahrilmubarok/gox/pkg/xdiscovery/xconsul"
+	"github.com/agussyahrilmubarok/gox/pkg/xgorm"
+	"github.com/agussyahrilmubarok/gox/pkg/xlogger/xzerolog"
 	"go.opentelemetry.io/otel"
 
 	"github.com/labstack/echo/v4"
@@ -25,6 +27,8 @@ import (
 
 	_ "example.com/booking/cmd/server/docs"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 )
 
 // @title Booking Service API
@@ -44,7 +48,7 @@ func main() {
 	configFlag := flag.String("config", "configs/config.json", "Path to config file")
 	flag.Parse()
 
-	vCfg, err := viperconfig.New(*configFlag)
+	vCfg, err := xviper.NewConfig(*configFlag)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
 		os.Exit(1)
@@ -56,13 +60,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := config.NewZerolog(cfg)
+	logger, err := xzerolog.NewLogger(cfg.Logger.Filepath, cfg.Logger.Level)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to setup logger: %v\n", err)
 		os.Exit(1)
 	}
 
-	db, err := config.NewPostgres(cfg)
+	db, err := xgorm.NewGorm("postgres", fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		cfg.Postgres.Host,
+		cfg.Postgres.Port,
+		cfg.Postgres.User,
+		cfg.Postgres.Password,
+		cfg.Postgres.DbName,
+		cfg.Postgres.SslMode,
+	), &xgorm.Options{
+		Config: &gorm.Config{
+			Logger: gormLogger.Default.LogMode(gormLogger.Silent),
+		},
+		MaxOpenConns:    cfg.Postgres.MaxOpenConns,
+		MaxIdleConns:    cfg.Postgres.MaxIdleConns,
+		ConnMaxLifetime: cfg.Postgres.ConnMaxLifetime,
+	})
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to connect to database")
 		os.Exit(1)
@@ -73,8 +92,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	instanceID := discovery.GenerateInstanceID(cfg.App.Name)
-	consulRegistry, err := consul.NewRegistry(cfg.Consul.Address)
+	instanceID := xdiscovery.GenerateInstanceID(cfg.App.Name)
+	consulRegistry, err := xconsul.NewRegistry(cfg.Consul.Address)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Failed to register consul discovery")
 		os.Exit(1)

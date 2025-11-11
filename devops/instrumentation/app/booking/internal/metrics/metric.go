@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"example.com/booking/pkg/config"
+	"example.com/booking/internal/config"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

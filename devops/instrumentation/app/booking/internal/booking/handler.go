@@ -3,7 +3,7 @@ package booking
 import (
 	"net/http"
 
-	"github.com/agussyahrilmubarok/gohelp/exception"
+	"github.com/agussyahrilmubarok/gox/pkg/xexception"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
@@ -55,7 +55,7 @@ func (h *Handler) Booking(c echo.Context) error {
 			Str("course_code", payload.CourseCode).
 			Msg("Failed to book course")
 
-		if httpErr, ok := err.(*exception.Http); ok {
+		if httpErr, ok := err.(*xexception.Http); ok {
 			return c.JSON(httpErr.Code, map[string]string{
 				"error": httpErr.Message,
 			})
@@ -106,7 +106,7 @@ func (h *Handler) BookingV2(c echo.Context) error {
 			Str("course_code", payload.CourseCode).
 			Msg("Failed to book course")
 
-		if httpErr, ok := err.(*exception.Http); ok {
+		if httpErr, ok := err.(*xexception.Http); ok {
 			return c.JSON(httpErr.Code, map[string]string{
 				"error": httpErr.Message,
 			})

@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"example.com/course/pkg/config"
+	"example.com/course/internal/config"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

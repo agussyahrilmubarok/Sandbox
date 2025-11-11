@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"example.com/booking/internal/logging"
-	"github.com/agussyahrilmubarok/gohelp/discovery/consul"
+	"github.com/agussyahrilmubarok/gox/pkg/xdiscovery/xconsul"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -37,11 +37,11 @@ type IClient interface {
 }
 
 type client struct {
-	registry *consul.Registry
+	registry *xconsul.Registry
 	tracer   trace.Tracer
 }
 
-func NewClient(registry *consul.Registry, tracer trace.Tracer) IClient {
+func NewClient(registry *xconsul.Registry, tracer trace.Tracer) IClient {
 	return &client{
 		registry: registry,
 		tracer:   tracer,

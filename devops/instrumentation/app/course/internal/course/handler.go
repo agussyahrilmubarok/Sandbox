@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/agussyahrilmubarok/gohelp/exception"
+	"github.com/agussyahrilmubarok/gox/pkg/xexception"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -42,7 +42,7 @@ func (h *Handler) FindAll(c echo.Context) error {
 	if err != nil {
 		span.RecordError(err)
 		log.Error().Err(err).Msg("Failed to fetch courses")
-		if httpErr, ok := err.(*exception.Http); ok {
+		if httpErr, ok := err.(*xexception.Http); ok {
 			return c.JSON(httpErr.Code, map[string]string{
 				"error": httpErr.Message,
 			})
@@ -81,7 +81,7 @@ func (h *Handler) Find(c echo.Context) error {
 	if err != nil {
 		span.RecordError(err)
 		log.Error().Err(err).Str("course_code", courseCode).Msg("Failed to fetch course")
-		if httpErr, ok := err.(*exception.Http); ok {
+		if httpErr, ok := err.(*xexception.Http); ok {
 			return c.JSON(httpErr.Code, map[string]string{
 				"error": httpErr.Message,
 			})
@@ -121,7 +121,7 @@ func (h *Handler) ReserveCourse(c echo.Context) error {
 	if err := h.service.ReserveByCode(ctx, payload.Code); err != nil {
 		span.RecordError(err)
 		log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to reserve course")
-		if httpErr, ok := err.(*exception.Http); ok {
+		if httpErr, ok := err.(*xexception.Http); ok {
 			return c.JSON(httpErr.Code, map[string]string{
 				"error": httpErr.Message,
 			})
@@ -162,7 +162,7 @@ func (h *Handler) ReleaseCourse(c echo.Context) error {
 	if err != nil {
 		span.RecordError(err)
 		log.Error().Err(err).Str("course_code", payload.Code).Msg("Failed to release course")
-		if httpErr, ok := err.(*exception.Http); ok {
+		if httpErr, ok := err.(*xexception.Http); ok {
 			return c.JSON(httpErr.Code, map[string]string{
 				"error": httpErr.Message,
 			})
@@ -243,7 +243,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 		if err := h.service.Save(ctx, &course); err != nil {
 			span.RecordError(err)
 			log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to insert dummy course")
-			if httpErr, ok := err.(*exception.Http); ok {
+			if httpErr, ok := err.(*xexception.Http); ok {
 				return c.JSON(httpErr.Code, map[string]string{
 					"error": httpErr.Message,
 				})
@@ -282,7 +282,7 @@ func (h *Handler) CleanDummy(c echo.Context) error {
 		if err := h.service.DeleteByID(ctx, course.ID); err != nil {
 			span.RecordError(err)
 			log.Error().Err(err).Str("course_id", course.ID).Msg("Failed to delete dummy course")
-			if httpErr, ok := err.(*exception.Http); ok {
+			if httpErr, ok := err.(*xexception.Http); ok {
 				return c.JSON(httpErr.Code, map[string]string{
 					"error": httpErr.Message,
 				})

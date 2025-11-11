@@ -3,7 +3,7 @@ package member
 import (
 	"net/http"
 
-	"github.com/agussyahrilmubarok/gohelp/exception"
+	"github.com/agussyahrilmubarok/gox/pkg/xexception"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -41,7 +41,7 @@ func (h *Handler) FindAll(c echo.Context) error {
 	if err != nil {
 		span.RecordError(err)
 		log.Error().Err(err).Msg("Failed to fetch members")
-		if httpErr, ok := err.(*exception.Http); ok {
+		if httpErr, ok := err.(*xexception.Http); ok {
 			return c.JSON(httpErr.Code, map[string]string{"error": httpErr.Message})
 		}
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch members"})
@@ -78,7 +78,7 @@ func (h *Handler) Find(c echo.Context) error {
 	if err != nil {
 		span.RecordError(err)
 		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to fetch member")
-		if httpErr, ok := err.(*exception.Http); ok {
+		if httpErr, ok := err.(*xexception.Http); ok {
 			return c.JSON(httpErr.Code, map[string]string{"error": httpErr.Message})
 		}
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to fetch member"})
@@ -112,7 +112,7 @@ func (h *Handler) InitDummy(c echo.Context) error {
 		if _, err := h.service.Save(ctx, m); err != nil {
 			span.RecordError(err)
 			log.Error().Err(err).Str("member_id", m.ID).Msg("Failed to insert dummy member")
-			if httpErr, ok := err.(*exception.Http); ok {
+			if httpErr, ok := err.(*xexception.Http); ok {
 				return c.JSON(httpErr.Code, map[string]string{
 					"error": httpErr.Message,
 				})
@@ -151,7 +151,7 @@ func (h *Handler) CleanDummy(c echo.Context) error {
 		if err := h.service.DeleteByID(ctx, m.ID); err != nil {
 			span.RecordError(err)
 			log.Error().Err(err).Str("member_id", m.ID).Str("member_code", m.Code).Msg("Failed to delete dummy member")
-			if httpErr, ok := err.(*exception.Http); ok {
+			if httpErr, ok := err.(*xexception.Http); ok {
 				return c.JSON(httpErr.Code, map[string]string{
 					"error": httpErr.Message,
 				})

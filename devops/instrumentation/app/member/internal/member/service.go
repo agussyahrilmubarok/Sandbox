@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"example.com/member/internal/metrics"
-	"github.com/agussyahrilmubarok/gohelp/exception"
+	"github.com/agussyahrilmubarok/gox/pkg/xexception"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -63,12 +63,12 @@ func (s *service) FindByID(ctx context.Context, memberID string) (*Member, error
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("member_id", memberID).Msg("Failed to fetch member by ID")
-		return nil, exception.NewHTTPNotFound("Member not found", err)
+		return nil, xexception.NewHTTPNotFound("Member not found", err)
 	}
 
 	if member == nil {
 		log.Warn().Str("member_id", memberID).Msg("Member not found")
-		return nil, exception.NewHTTPNotFound("Member not found", nil)
+		return nil, xexception.NewHTTPNotFound("Member not found", nil)
 	}
 
 	log.Info().Str("member_id", member.ID).Msg("Successfully fetched member by ID")
@@ -87,12 +87,12 @@ func (s *service) FindByCode(ctx context.Context, memberCode string) (*Member, e
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("member_code", memberCode).Msg("Failed to fetch member by Code")
-		return nil, exception.NewHTTPNotFound("Member not found", err)
+		return nil, xexception.NewHTTPNotFound("Member not found", err)
 	}
 
 	if member == nil {
 		log.Warn().Str("member_code", memberCode).Msg("Member not found")
-		return nil, exception.NewHTTPNotFound("Member not found", nil)
+		return nil, xexception.NewHTTPNotFound("Member not found", nil)
 	}
 
 	log.Info().Str("member_code", member.ID).Msg("Successfully fetched member by Code")
@@ -111,12 +111,12 @@ func (s *service) FindByEmail(ctx context.Context, memberEmail string) (*Member,
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		log.Error().Err(err).Str("member_email", memberEmail).Msg("Failed to fetch member by Email")
-		return nil, exception.NewHTTPNotFound("Member not found", err)
+		return nil, xexception.NewHTTPNotFound("Member not found", err)
 	}
 
 	if member == nil {
 		log.Warn().Str("member_email", memberEmail).Msg("Member not found")
-		return nil, exception.NewHTTPNotFound("Member not found", nil)
+		return nil, xexception.NewHTTPNotFound("Member not found", nil)
 	}
 
 	log.Info().Str("member_email", member.ID).Msg("Successfully fetched member by Email")
