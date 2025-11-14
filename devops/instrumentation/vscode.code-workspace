@@ -1,16 +1,36 @@
 {
     "folders": [
         {
-            "name": "booking-app",
-            "path": "./app/booking"
+            "name": "go-stack",
+            "path": "./go-stack"
         },
         {
-            "name": "course-app",
-            "path": "./app/course"
+            "name": "go-stack/booking-app",
+            "path": "./go-stack/app/booking"
         },
         {
-            "name": "member-app",
-            "path": "./app/member"
+            "name": "go-stack/course-app",
+            "path": "./go-stack/app/course"
+        },
+        {
+            "name": "go-stack/member-app",
+            "path": "./go-stack/app/member"
+        },
+        {
+            "name": "java-stack",
+            "path": "./java-stack"
+        },
+        {
+            "name": "java-stack/booking-app",
+            "path": "./java-stack/app/booking"
+        },
+        {
+            "name": "java-stack/course-app",
+            "path": "./java-stack/app/course"
+        },
+        {
+            "name": "java-stack/member-app",
+            "path": "./java-stack/app/member"
         },
         {
             "name": "project",

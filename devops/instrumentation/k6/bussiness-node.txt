@@ -1,5 +1,0 @@
-// available member. Code:"MEMBER-1000","MEMBER-1001",
-// not available member. Code:"MEMBER-1003",
-// available start_date, end_date and seat. Code:"COURSE-001",
-// available start_date, end_date, but not seat. Code:"COURSE-002",
-// not available start_date, end_date, but available seat. Code: "COURSE-004",

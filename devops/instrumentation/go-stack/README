@@ -1,0 +1,14 @@
+## Technology Stack
+
+- Grafana
+- Loki
+- FluentBit
+- Prometheus
+- Prometheus AlertManager
+- Open Telemetry
+- Jaeger
+- Go
+- Echo
+- GORM
+- Postgres
+- Swagger

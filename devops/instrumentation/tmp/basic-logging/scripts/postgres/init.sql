@@ -1,3 +1,0 @@
-CREATE DATABASE member_db;
-CREATE DATABASE course_db;
-CREATE DATABASE booking_db;
