@@ -1,12 +1,12 @@
 server:
-  port: 8081
+  port: 8080
   shutdown: graceful
 
 spring:
   application:
-    name: member-app
+    name: booking-app
   datasource:
-    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/member_db}
+    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/booking_db}
     username: ${JDBC_DATABASE_USERNAME:postgres}
     password: ${JDBC_DATABASE_PASSWORD:my-secret-pw}
     hikari:

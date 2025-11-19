@@ -29,7 +29,7 @@ public class MemberResource {
             description = "Retrieves all member data",
             tags = {"Members"}
     )
-    public ResponseEntity<?> findAll() {
+    public ResponseEntity<List<MemberDTO>> findAll() {
         List<MemberDTO> members = memberService.findAll();
 
         log.info("Successfully retrieved all members, count={}", members.size());
@@ -76,8 +76,7 @@ public class MemberResource {
                 memberService.create(dummy);
                 log.info("Created dummy member: code={} email={}", dummy.getCode(), dummy.getEmail());
             } catch (Exception e) {
-                log.error("Failed to create dummy member: code={} email={}",
-                        dummy.getCode(), dummy.getEmail(), e);
+                log.error("Failed to create dummy member: code={} email={}", dummy.getCode(), dummy.getEmail(), e);
             }
         }
 
@@ -98,8 +97,7 @@ public class MemberResource {
                 memberService.deleteById(member.getId());
                 log.info("Deleted dummy member: code={} email={}", member.getCode(), member.getEmail());
             } catch (Exception e) {
-                log.error("Failed to delete dummy member: code={} email={}",
-                        member.getCode(), member.getEmail(), e);
+                log.error("Failed to delete dummy member: code={} email={}", member.getCode(), member.getEmail(), e);
             }
         }
 

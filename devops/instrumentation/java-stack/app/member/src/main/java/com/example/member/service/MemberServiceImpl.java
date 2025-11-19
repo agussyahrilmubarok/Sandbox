@@ -38,7 +38,7 @@ public class MemberServiceImpl implements MemberService {
                 })
                 .orElseThrow(() -> {
                     log.warn("Member not found for id={}", id);
-                    return new NotFoundException();
+                    return new NotFoundException("Member not found");
                 });
     }
 
@@ -51,7 +51,7 @@ public class MemberServiceImpl implements MemberService {
                 })
                 .orElseThrow(() -> {
                     log.warn("Member not found for code={}", code);
-                    return new NotFoundException();
+                    return new NotFoundException("Member not found");
                 });
     }
 
@@ -64,7 +64,7 @@ public class MemberServiceImpl implements MemberService {
                 })
                 .orElseThrow(() -> {
                     log.warn("Member not found for email={}", email);
-                    return new NotFoundException();
+                    return new NotFoundException("Member not found");
                 });
     }
 
@@ -93,7 +93,7 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Update failed — member not found for id={}", id);
-                    return new NotFoundException();
+                    return new NotFoundException("Member not found");
                 });
 
         mapToEntity(memberDTO, member);
@@ -108,10 +108,10 @@ public class MemberServiceImpl implements MemberService {
         final Member member = memberRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("Delete failed — member not found for id={}", id);
-                    return new NotFoundException();
+                    return new NotFoundException("Member not found");
                 });
-        memberRepository.delete(member);
 
+        memberRepository.delete(member);
         log.info("Successfully deleted member id={}", id);
     }
 
