@@ -344,18 +344,21 @@ func (ts *ServiceTestSuite) TestReleaseByCodeSuccess() {
 
 	expectedAfterRelease := initialSeatAvailable + 1 // 6
 	ts.mockIStore.On("Save", mock.Anything, mock.MatchedBy(func(c *course.Course) bool {
-		return c.Code == "COURSE-REL-001" && c.SeatAvailable == expectedAfterRelease
+		return c.Code == "COURSE-REL-001" &&
+			c.SeatAvailable == expectedAfterRelease
 	})).Return(nil).Once()
 
 	err := ts.service.ReleaseByCode(context.Background(), "COURSE-REL-001")
 
 	ts.NoError(err)
-	ts.mockIStore.AssertExpectations(ts.T())
 	ts.Equal(expectedAfterRelease, m.SeatAvailable)
+	ts.mockIStore.AssertExpectations(ts.T())
 }
 
 func (ts *ServiceTestSuite) TestReleaseByCodeFailNotFoundCode() {
-	ts.mockIStore.On("FindByCode", mock.Anything, "ZZZ-REL").Return(nil, errors.New("db error")).Once()
+
+	ts.mockIStore.On("FindByCode", mock.Anything, "ZZZ-REL").
+		Return(nil, errors.New("db error")).Once()
 
 	err := ts.service.ReleaseByCode(context.Background(), "ZZZ-REL")
 
@@ -365,7 +368,9 @@ func (ts *ServiceTestSuite) TestReleaseByCodeFailNotFoundCode() {
 }
 
 func (ts *ServiceTestSuite) TestReleaseByCodeFailNotFoundCourse() {
-	ts.mockIStore.On("FindByCode", mock.Anything, "YYY-REL").Return(nil, nil).Once()
+
+	ts.mockIStore.On("FindByCode", mock.Anything, "YYY-REL").
+		Return(nil, nil).Once()
 
 	err := ts.service.ReleaseByCode(context.Background(), "YYY-REL")
 
@@ -375,13 +380,16 @@ func (ts *ServiceTestSuite) TestReleaseByCodeFailNotFoundCourse() {
 }
 
 func (ts *ServiceTestSuite) TestReleaseByCodeFailCourseEnded() {
+
 	m := &course.Course{
 		Code:          "COURSE-REL-END",
-		EndDate:       time.Now().Add(-1 * time.Hour),
+		EndDate:       time.Now().Add(-1 * time.Hour), // already ended
+		Seat:          10,
 		SeatAvailable: 5,
 	}
 
-	ts.mockIStore.On("FindByCode", mock.Anything, "COURSE-REL-END").Return(m, nil).Once()
+	ts.mockIStore.On("FindByCode", mock.Anything, "COURSE-REL-END").
+		Return(m, nil).Once()
 
 	err := ts.service.ReleaseByCode(context.Background(), "COURSE-REL-END")
 
@@ -391,21 +399,49 @@ func (ts *ServiceTestSuite) TestReleaseByCodeFailCourseEnded() {
 	ts.mockIStore.AssertExpectations(ts.T())
 }
 
+func (ts *ServiceTestSuite) TestReleaseByCodeFailSeatAlreadyFull() {
+	m := &course.Course{
+		Code:          "COURSE-REL-FULL",
+		Seat:          10,
+		SeatAvailable: 10, // FULL — cannot release more
+		EndDate:       time.Now().Add(2 * time.Hour),
+	}
+
+	ts.mockIStore.On("FindByCode", mock.Anything, "COURSE-REL-FULL").
+		Return(m, nil).Once()
+
+	err := ts.service.ReleaseByCode(context.Background(), "COURSE-REL-FULL")
+
+	ts.Error(err)
+	ts.Contains(err.Error(), "all seats are already available")
+
+	ts.mockIStore.AssertNotCalled(ts.T(), "Save", mock.Anything, mock.Anything)
+	ts.mockIStore.AssertExpectations(ts.T())
+}
+
 func (ts *ServiceTestSuite) TestReleaseByCodeFailSave() {
+
 	initialSeatAvailable := 5
 	m := &course.Course{
 		Code:          "COURSE-REL-SAVEFAIL",
-		EndDate:       time.Now().Add(7 * 24 * time.Hour),
+		Seat:          10,
+		EndDate:       time.Now().Add(7 * 24 * time.Hour), // valid course
 		SeatAvailable: initialSeatAvailable,
 	}
 
-	ts.mockIStore.On("FindByCode", mock.Anything, "COURSE-REL-SAVEFAIL").Return(m, nil).Once()
-	ts.mockIStore.On("Save", mock.Anything, mock.Anything).Return(errors.New("db save failed")).Once()
+	ts.mockIStore.On("FindByCode", mock.Anything, "COURSE-REL-SAVEFAIL").
+		Return(m, nil).Once()
+
+	ts.mockIStore.On("Save", mock.Anything, mock.Anything).
+		Return(errors.New("db save failed")).Once()
 
 	err := ts.service.ReleaseByCode(context.Background(), "COURSE-REL-SAVEFAIL")
 
 	ts.Error(err)
 	ts.Contains(err.Error(), "db save failed")
-	ts.mockIStore.AssertExpectations(ts.T())
+
+	// Seat must still increment even if save fails
 	ts.Equal(initialSeatAvailable+1, m.SeatAvailable)
+
+	ts.mockIStore.AssertExpectations(ts.T())
 }

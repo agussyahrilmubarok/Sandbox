@@ -230,6 +230,14 @@ func (s *service) ReleaseByCode(ctx context.Context, courseCode string) error {
 		return err
 	}
 
+	if course.SeatAvailable >= course.Seat {
+		err := xexception.NewHTTPBadRequest("all seats are already available", nil)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		log.Warn().Str("course_code", courseCode).Msg("all seats are already available, cannot release seat")
+		return err
+	}
+
 	course.SeatAvailable++
 	if err := s.store.Save(ctx, course); err != nil {
 		span.RecordError(err)
