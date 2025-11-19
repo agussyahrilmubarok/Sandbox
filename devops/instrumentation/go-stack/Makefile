@@ -1,3 +1,17 @@
+app/all/build:
+	cd app/member && \
+	go fmt ./... && \
+	go vet ./... && \
+	go build -o build/member-app cmd/server/main.go
+	cd app/course && \
+	go fmt ./... && \
+	go vet ./... && \
+	go build -o build/course-app cmd/server/main.go
+	cd app/booking && \
+	go fmt ./... && \
+	go vet ./... && \
+	go build -o build/booking-app cmd/server/main.go
+
 compose/up:
 	docker compose up -d --build
 

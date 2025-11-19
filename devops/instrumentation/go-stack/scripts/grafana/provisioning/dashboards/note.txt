@@ -1,0 +1,17 @@
+member-app-logging
+    - all-logs-member-app,q:{service_name="member-app"} |= ""
+    - log-volume-member-app,q:count_over_time({service_name="member-app"}[5m])
+    - error-rate-member-app,q:count_over_time({service_name="member-app"} |= "error" [5m])
+    - top-error-message-member-app,q:topk(10, count_over_time({service_name="member-app"} |= "error" [5m]))
+
+course-app-logging
+    - all-logs-course-app,q:{service_name="course-app"} |= ""
+    - log-volume-course-app,q:count_over_time({service_name="course-app"}[5m])
+    - error-rate-course-app,q:count_over_time({service_name="course-app"} |= "error" [5m])
+    - top-error-message-course-app,q:topk(10, count_over_time({service_name="course-app"} |= "error" [5m]))
+
+booking-app-logging
+    - all-logs-booking-app,q:{service_name="booking-app"} |= ""
+    - log-volume-booking-app,q:count_over_time({service_name="booking-app"}[5m])
+    - error-rate-booking-app,q:count_over_time({service_name="booking-app"} |= "error" [5m])
+    - top-error-message-booking-app,q:topk(10, count_over_time({service_name="booking-app"} |= "error" [5m]))

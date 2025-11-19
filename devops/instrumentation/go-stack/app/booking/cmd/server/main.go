@@ -138,6 +138,7 @@ func main() {
 	handler := booking.NewHandler(service)
 
 	e := echo.New()
+	e.HideBanner = true
 	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(logging.RequestIDMiddleware(logger))
