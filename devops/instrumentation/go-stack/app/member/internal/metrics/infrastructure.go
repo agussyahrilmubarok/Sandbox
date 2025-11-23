@@ -10,40 +10,47 @@ import (
 )
 
 var (
-	// system_cpu_usage_percent{job="member-app"}
-	// system_cpu_usage_percent{job="member-app", core="0"}
-	// avg(rate(system_cpu_usage_percent{job="member-app"}[5m])) by (core)
+	// CPU % per core
 	CPUUsage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "system_cpu_usage_percent",
-			Help: "Percentage of CPU usage",
+			Help: "CPU usage percentage per core",
 		},
 		[]string{"core"},
 	)
 
-	// system_memory_usage_bytes{job="member-app", type="ram"}
+	// Memory used (bytes)
 	MemoryUsage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "system_memory_usage_bytes",
-			Help: "Amount of memory used in bytes",
+			Help: "Current memory usage in bytes",
 		},
 		[]string{"type"},
 	)
 
-	// system_memory_total_bytes{job="member-app", type="ram"}
+	// Memory total (bytes)
 	TotalMemory = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "system_memory_total_bytes",
-			Help: "Total amount of memory in bytes",
+			Help: "Total memory available in bytes",
 		},
 		[]string{"type"},
 	)
 
-	// system_disk_usage_bytes{job="member-app", disk="/"}
+	// Disk usage (bytes)
 	DiskUsage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "system_disk_usage_bytes",
-			Help: "Amount of disk space used in bytes",
+			Help: "Disk used in bytes",
+		},
+		[]string{"disk"},
+	)
+
+	// Disk total (bytes) → untuk hitung %
+	DiskTotal = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "system_disk_total_bytes",
+			Help: "Total disk capacity in bytes",
 		},
 		[]string{"disk"},
 	)
@@ -52,7 +59,9 @@ var (
 func init() {
 	prometheus.MustRegister(CPUUsage)
 	prometheus.MustRegister(MemoryUsage)
+	prometheus.MustRegister(TotalMemory)
 	prometheus.MustRegister(DiskUsage)
+	prometheus.MustRegister(DiskTotal)
 }
 
 func UpdateCPUUsage() {
@@ -62,7 +71,7 @@ func UpdateCPUUsage() {
 	}
 
 	for i, usage := range percent {
-		CPUUsage.With(prometheus.Labels{"core": fmt.Sprintf("%d", i)}).Set(usage)
+		CPUUsage.WithLabelValues(fmt.Sprintf("%d", i)).Set(usage)
 	}
 }
 
@@ -72,8 +81,8 @@ func UpdateMemoryUsage() {
 		return
 	}
 
-	MemoryUsage.With(prometheus.Labels{"type": "ram"}).Set(float64(vmStat.Used))
-	TotalMemory.With(prometheus.Labels{"type": "ram"}).Set(float64(vmStat.Total))
+	MemoryUsage.WithLabelValues("ram").Set(float64(vmStat.Used))
+	TotalMemory.WithLabelValues("ram").Set(float64(vmStat.Total))
 }
 
 func UpdateDiskUsage() {
@@ -82,5 +91,6 @@ func UpdateDiskUsage() {
 		return
 	}
 
-	DiskUsage.With(prometheus.Labels{"disk": "/"}).Set(float64(usage.Used))
+	DiskUsage.WithLabelValues("/").Set(float64(usage.Used))
+	DiskTotal.WithLabelValues("/").Set(float64(usage.Total))
 }
