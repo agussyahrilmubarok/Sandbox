@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -20,23 +19,22 @@ func connectES() {
 	defer cancel()
 
 	cfg := elasticsearch.Config{
-		Addresses: []string{
-			"http://localhost:9200",
-		},
+		Addresses: []string{"http://localhost:9200"},
 	}
+
 	client, err := elasticsearch.NewClient(cfg)
 	if err != nil {
-		log.Fatalf("error creating elasticsearch client: %s", err)
+		log.Fatalf("error creating elasticsearch client: %v", err)
 	}
 
 	res, err := client.Ping(client.Ping.WithContext(ctx))
 	if err != nil {
-		log.Fatalf("elasticsearch connection failed (timeout or unreachable): %v", err)
+		log.Fatalf("elasticsearch connection failed: %v", err)
 	}
 	defer res.Body.Close()
 
 	es = client
-	fmt.Println("connected to elasticsearch")
+	log.Println("connected to elasticsearch")
 }
 
 type Book struct {
@@ -64,16 +62,16 @@ func initDummyBooks() {
 			es.Index.WithContext(context.Background()),
 		)
 		if err != nil {
-			log.Println("error indexing book:", err)
+			log.Printf("error indexing book %s: %v", b.ID, err)
 			continue
 		}
 		res.Body.Close()
 	}
 
-	fmt.Println("dummy books inserted to elasticsearch")
+	log.Println("dummy books inserted into elasticsearch")
 }
 
-// curl "http://localhost:8080/api/v1/books/search?q=clean"
+// GET /api/v1/books/search?q=clean
 func searchBook(c echo.Context) error {
 	query := c.QueryParam("q")
 	if query == "" {
@@ -99,8 +97,8 @@ func searchBook(c echo.Context) error {
 		es.Search.WithBody(&buf),
 		es.Search.WithTrackTotalHits(true),
 	)
-
 	if err != nil {
+		log.Printf("elasticsearch search error: %v", err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": err.Error(),
 		})
@@ -115,13 +113,14 @@ func searchBook(c echo.Context) error {
 
 func main() {
 	connectES()
-
 	initDummyBooks()
 
 	e := echo.New()
 
 	e.GET("/api/v1/books/search", searchBook)
 
-	fmt.Println("Server running at :8080")
-	e.Start(":8080")
+	log.Println("Server running at :8080")
+	if err := e.Start(":8080"); err != nil {
+		log.Fatalf("server failed: %v", err)
+	}
 }
