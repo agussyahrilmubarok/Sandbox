@@ -12,13 +12,6 @@ import (
 
 var db *sql.DB
 
-type Book struct {
-	ID     string `json:"id"`
-	Title  string `json:"title"`
-	Author string `json:"author"`
-	Year   int    `json:"year"`
-}
-
 func connectPostgres() {
 	// DSN format: postgres://username:password@host:port/dbname?sslmode=disable
 	dsn := "postgres://postgres:sandboxpass@localhost:5432/sandbox?sslmode=disable"
@@ -33,6 +26,13 @@ func connectPostgres() {
 	}
 
 	log.Println("connected to postgres")
+}
+
+type Book struct {
+	ID     string `json:"id"`
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	Year   int    `json:"year"`
 }
 
 func initDummyBooks() {
