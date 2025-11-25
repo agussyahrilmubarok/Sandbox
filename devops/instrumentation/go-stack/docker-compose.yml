@@ -60,7 +60,7 @@ services:
     ports:
       - "8082:8082"
     volumes:
-      - ./logging/course-app:/app/logs
+      - ./logging-group/course-app:/app/logs
     networks:
       - instrument_net
     depends_on:
