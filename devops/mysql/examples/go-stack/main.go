@@ -12,13 +12,6 @@ import (
 
 var db *sql.DB
 
-type Book struct {
-	ID     string `json:"id"`
-	Title  string `json:"title"`
-	Author string `json:"author"`
-	Year   int    `json:"year"`
-}
-
 func connectMySQL() {
 	// DSN format: username:password@tcp(host:port)/database
 	dsn := "sandboxuser:sandboxpass@tcp(localhost:3306)/sandbox"
@@ -33,6 +26,13 @@ func connectMySQL() {
 	}
 
 	log.Println("connected to mysql")
+}
+
+type Book struct {
+	ID     string `json:"id"`
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	Year   int    `json:"year"`
 }
 
 func initDummyBooks() {
