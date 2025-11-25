@@ -7,6 +7,26 @@ services:
       - "6379:6379"
     networks:
       - sandbox_net
+    volumes:
+      - redis_data:/data
+
+  redis-insight:
+    image: redis/redisinsight:2.70
+    container_name: redis-insight
+    restart: on-failure
+    ports:
+      - "5540:5540"
+    networks:
+      - sandbox_net
+    volumes:
+      - redis_insight_data:/db
+    # environment:
+    #   - REDIS_HOST=redis
+    #   - REDIS_PORT=6379
+
+volumes:
+  redis_data:
+  redis_insight_data:
 
 networks:
   sandbox_net:
