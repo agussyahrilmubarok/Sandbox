@@ -1,4 +1,6 @@
+# https://go2docs.graylog.org/5-2/downloading_and_installing_graylog/docker_installation.htm?Highlight=docker%20compose
 services:
+  # MongoDB: https://hub.docker.com/_/mongo/
   mongodb:
     image: mongo:6.0.14
     container_name: mongodb
@@ -10,6 +12,7 @@ services:
     networks:
       - sandbox_net
   
+  # OpenSearch: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/
   opensearch:
     image: opensearchproject/opensearch:2.12.0
     container_name: opensearch
@@ -21,6 +24,8 @@ services:
       - "action.auto_create_index=false"
       - "plugins.security.ssl.http.enabled=false"
       - "plugins.security.disabled=true"
+      # Can generate a password for `OPENSEARCH_INITIAL_ADMIN_PASSWORD` using a linux device via:
+      # tr -dc A-Z-a-z-0-9_@#%^-_=+ < /dev/urandom  | head -c${1:-32}
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=+_8r#wliY3Pv5-HMIf4qzXImYzZf-M=M
     ulimits:
       memlock:
@@ -37,12 +42,15 @@ services:
     networks:
       - sandbox_net
 
+  # Graylog: https://hub.docker.com/r/graylog/graylog/
   graylog:
     image: graylog/graylog:5.2
     container_name: graylog
     restart: always
     environment:
+      # CHANGE ME (must be at least 16 characters)!
       - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+      # Password: admin
       - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918   
       - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
     entrypoint: /usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh
