@@ -37,7 +37,9 @@ services:
       start_period: 10s
 
   member-app:
-    image: agussyahrilmubarok/instgo-member-app:1.0.0
+    build: 
+      context: ./app/member
+    image: instgo-member-app:1.0.0
     container_name: member-app
     restart: on-failure
     ports:
@@ -52,7 +54,9 @@ services:
         condition: service_healthy
   
   course-app:
-    image: agussyahrilmubarok/instgo-course-app:1.0.0
+    build: 
+      context: ./app/course
+    image: instgo-course-app:1.0.0
     container_name: course-app
     restart: on-failure
     ports:
@@ -66,7 +70,9 @@ services:
         condition: service_healthy
 
   booking-app:
-    image: agussyahrilmubarok/instgo-booking-app:1.0.0
+    build: 
+      context: ./app/booking
+    image: instgo-booking-app:1.0.0
     container_name: booking-app
     restart: on-failure
     ports:
