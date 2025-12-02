@@ -37,21 +37,48 @@ services:
       start_period: 10s
 
   member-app:
-    build: 
-      context: ./app/member
+    image: agussyahrilmubarok/instgo-member-app:1.0.0
     container_name: member-app
     restart: on-failure
     ports:
       - "8081:8081"
       - "7071:7071"
     volumes:
-      - ./logging/member-app:/app/logs
+      - ./centralized-logging/member-app:/app/logs
+    networks:
+      - instrument_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+  
+  course-app:
+    image: agussyahrilmubarok/instgo-course-app:1.0.0
+    container_name: course-app
+    restart: on-failure
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./centralized-logging/course-app:/app/logs
     networks:
       - instrument_net
     depends_on:
       postgres:
         condition: service_healthy
 
+  booking-app:
+    image: agussyahrilmubarok/instgo-booking-app:1.0.0
+    container_name: booking-app
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./centralized-logging/booking-app:/app/logs
+    networks:
+      - instrument_net
+    depends_on:
+      postgres:
+        condition: service_healthy   
+  
   grafana:
     image: grafana/grafana:12.2
     container_name: grafana
@@ -98,7 +125,7 @@ services:
     volumes:
       - ./scripts/fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
       - ./scripts/fluentbit/map.json:/fluent-bit/etc/map.json
-      - ./logging:/app/logs
+      - ./centralized-logging:/app/centralized-logging
     networks:
       - instrument_net
     depends_on:
@@ -121,6 +148,10 @@ services:
       - prometheus_data:/prometheus
     networks:
       - instrument_net
+    depends_on:
+      - member-app
+      - course-app
+      - booking-app
 
   jaeger:
     image: jaegertracing/all-in-one:1.74.0
@@ -144,6 +175,10 @@ services:
       - "--collector.otlp.http.host-port=:4318"
     networks:
       - instrument_net
+    depends_on:
+      - member-app
+      - course-app
+      - booking-app
 
 volumes:
   postgres_data:

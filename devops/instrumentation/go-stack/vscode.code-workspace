@@ -1,0 +1,20 @@
+{
+    "folders": [
+        {
+            "name": "member-app",
+            "path": "./app/member"
+        },
+        {
+            "name": "course-app",
+            "path": "./app/course"
+        },
+        {
+            "name": "booking-app",
+            "path": "./app/booking"
+        },
+        {
+            "name": ".",
+            "path": "."
+        }
+    ],
+}
