@@ -66,6 +66,7 @@ services:
 volumes:
   mongo_data:
   os_data:
+  graylog_data:
   
 networks:
   sandbox_net:
