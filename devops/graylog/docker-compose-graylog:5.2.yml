@@ -1,22 +1,17 @@
-# https://go2docs.graylog.org/5-2/downloading_and_installing_graylog/docker_installation.htm?Highlight=docker%20compose
+# Tested
 services:
-  # MongoDB: https://hub.docker.com/_/mongo/
   mongodb:
-    image: mongo:6.0.14
-    container_name: mongodb
-    restart: on-failure
-    ports:
-      - "27017:27017"
+    image: "mongo:6.0.14"
+    container_name: graylog-mongo
     volumes:
-      - mongo_data:/data/db
+      - graylog_mongo:/data/db
     networks:
       - sandbox_net
-  
-  # OpenSearch: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/
+
   opensearch:
-    image: opensearchproject/opensearch:2.12.0
-    container_name: opensearch
-    restart: on-failure
+    image: "opensearchproject/opensearch:2.12.0"
+    container_name: graylog-os
+    restart: "on-failure"
     environment:
       - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
       - "bootstrap.memory_lock=true"
@@ -34,35 +29,37 @@ services:
       nofile:
         soft: 65536
         hard: 65536
-    ports:
-      - "9200:9200"                               # OpenSearch HTTP API
-      - "9600:9600"                               # Performance analyzer
     volumes:
-      - os_data:/usr/share/opensearch/data
+      - graylog_opensearch:/usr/share/opensearch/data
     networks:
       - sandbox_net
 
-  # Graylog: https://hub.docker.com/r/graylog/graylog/
   graylog:
-    image: graylog/graylog:5.2
+    image: "graylog/graylog:5.2"
     container_name: graylog
     restart: always
     environment:
+      - GRAYLOG_NODE_ID_FILE=/usr/share/graylog/data/config/node-id
+      - GRAYLOG_HTTP_BIND_ADDRESS=0.0.0.0:9000
+      - GRAYLOG_ELASTICSEARCH_HOSTS=http://opensearch:9200
+      - GRAYLOG_MONGODB_URI=mongodb://mongodb:27017/graylog
       # CHANGE ME (must be at least 16 characters)!
       - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
       # Password: admin
-      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918   
+      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
       - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
-    entrypoint: /usr/bin/tini -- wait-for-it opensearch:9200 --  /docker-entrypoint.sh
-    links:
-      - mongodb:mongo
-      - opensearch
+    entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh
     ports:
-      - "9000:9000"          # Graylog web UI
-      - "1514:1514"          # Syslog TCP
-      - "1514:1514/udp"      # Syslog UDP
-      - "12201:12201"        # GELF TCP
-      - "12201:12201/udp"    # GELF UDP
+      # Graylog web interface and REST API
+      - 9000:9000
+      # Syslog TCP
+      - 1514:1514
+      # Syslog UDP
+      - 1514:1514/udp
+      # GELF TCP
+      - 12201:12201
+      # GELF UDP
+      - 12201:12201/udp
     volumes:
       - graylog_data:/usr/share/graylog/data
     networks:
@@ -72,10 +69,10 @@ services:
       - opensearch
 
 volumes:
-  mongo_data:
-  os_data:
+  graylog_mongo:
+  graylog_opensearch:
   graylog_data:
-  
+
 networks:
   sandbox_net:
     driver: bridge
