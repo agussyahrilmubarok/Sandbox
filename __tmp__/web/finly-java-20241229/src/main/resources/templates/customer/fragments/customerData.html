@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="customerData" class="w-full">
+
+    <div class="flex w-full items-center justify-between">
+        <h1 class="text-2xl" th:text="${title}"></h1>
+    </div>
+
+    <form method="get" th:action="@{/dashboard/customers}">
+        <div class="mt-4 flex items-center justify-between gap-2 md:mt-8">
+            <div class="relative flex flex-1 flex-shrink-0">
+                <label for="search" class="input input-bordered flex items-center gap-2 w-full">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="search" name="search" type="text" class="grow" placeholder="Search customers..." />
+                </label>
+            </div>
+            <a class="btn btn-primary" th:href="@{/dashboard/customers/create}">
+                <i class="fa-solid fa-plus fa-lg mr-2"></i>
+                New Customer
+            </a>
+        </div>
+    </form>
+
+    <div class="mt-6 overflow-x-auto bg-white rounded-lg p-2">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${customers.size() == 0}">
+                <td colspan="5" class="text-center text-gray-500">Data is not found</td>
+            </tr>
+            <tr th:each="customer : ${customers}">
+                <td th:text="${customer.name}"></td>
+                <td th:text="${customer.email}"></td>
+                <td th:text="${customer.address}"></td>
+                <td th:text="${customer.phone}"></td>
+                <td>
+                    <div class="flex justify-end gap-3">
+                        <a class="rounded-md border p-2 hover:bg-gray-100" th:href="@{/dashboard/customers/{id}/edit(id=${customer.id})}">
+                            <i class="fa-solid fa-pen-to-square fa-lg"></i>
+                        </a>
+                        <button class="rounded-md border p-2 hover:bg-gray-100"
+                                th:onclick="deleteCustomerModal([[${customer.id}]])">
+                            <span class="sr-only">Delete</span>
+                            <i class="fa-solid fa-trash fa-lg"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

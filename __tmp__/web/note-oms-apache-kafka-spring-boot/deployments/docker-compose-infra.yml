@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:17.2
+    container_name: oms_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: P4ssword!
+    ports:
+      - "5432:5432"  
+    volumes:
+      - ./postgres/initdb/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+    networks:
+      - oms_network
+
+  broker:
+    image: apache/kafka:latest
+    hostname: broker
+    container_name: oms_broker
+    environment:
+      KAFKA_BROKER_ID: 1  
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT  
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092  
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1  
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0  
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1  
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1  
+      KAFKA_PROCESS_ROLES: broker,controller  
+      KAFKA_NODE_ID: 1  
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093  
+      KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092  
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT 
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER 
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs  
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk  
+    ports:
+      - "9092:9092"  
+    networks:
+      - oms_network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: oms_kafkaui
+    restart: always
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:29092  
+    ports:
+      - "9000:8080"
+    depends_on:
+      - broker
+    networks:
+      - oms_network
+
+networks:
+  oms_network:
+    driver: bridge

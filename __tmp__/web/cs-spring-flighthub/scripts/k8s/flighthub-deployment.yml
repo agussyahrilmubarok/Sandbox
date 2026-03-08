@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flighthub
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flighthub
+  template:
+    metadata:
+      labels:
+        app: flighthub
+    spec:
+      containers:
+        - name: flighthub
+          image: mzs-house/flighthub:latest
+          # imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 1133
+          envFrom:
+            - configMapRef:
+                name: flighthub-config
+          volumeMounts:
+            - name: flighthub-data
+              mountPath: /data/logs
+      volumes:
+        - name: flighthub-data
+          emptyDir: { }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flighthub-service
+  namespace: default
+spec:
+  selector:
+    app: flighthub
+  ports:
+    - protocol: TCP
+      port: 1133
+      targetPort: 1133
+  type: NodePort

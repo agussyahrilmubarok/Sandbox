@@ -1,0 +1,12 @@
+services:
+  # DATABASE
+  postgres:
+    container_name: forum-postgres
+    image: postgres:16.4
+    restart: on-failure
+    environment:
+      POSTGRES_USER: forum
+      POSTGRES_PASSWORD: my-secret-pw
+      POSTGRES_DB: forum
+    ports:
+      - '5432:5432'

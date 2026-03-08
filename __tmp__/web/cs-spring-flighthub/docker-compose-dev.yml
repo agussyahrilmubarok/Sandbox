@@ -1,0 +1,15 @@
+services:
+  mongo:
+    image: "mongo:4.4"
+    container_name: mongo-container
+    restart: on-failure
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_container:/data/db
+
+volumes:
+  mongodb_data_container:
+
+networks:
+  flighhubnetwork:

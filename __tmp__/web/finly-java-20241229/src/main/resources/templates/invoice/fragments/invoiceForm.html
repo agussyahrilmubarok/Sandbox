@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="invoiceForm">
+    <h1 class="mb-4 text-xl md:text-2xl" th:text="${title}"></h1>
+
+    <form th:action="${title == 'Create Invoice' ? '/dashboard/invoices' : '/dashboard/invoices/' + invoice.id}"  th:object="${invoice}" method="post">
+        <div class="rounded-md bg-slate-100 p-4 md:p-6">
+            <div class="flex flex-col gap-4">
+
+                <div class="form-control w-full gap-2"><span class="label-text">Choose Customer</span>
+                    <label for="customer" class="input input-bordered flex items-center gap-2">
+                        <i class="fa-regular fa-user"></i>
+                        <select class="grow cursor-pointer" name="customer" id="customer">
+                            <option value="">Select Customer</option>
+                            <th:block th:each="customer : ${customers}">
+                                <option th:value="${customer.id}"
+                                        th:selected="${invoice != null and invoice.customer != null and invoice.customer.id == customer.id}">
+                                    <span th:text="${customer.name}"></span>
+                                </option>
+                            </th:block>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="form-control w-full gap-2">
+                    <span class="label-text">Amount</span>
+                    <label for="amount" class="input input-bordered flex items-center gap-2">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                        <input id="amount" name="amount" type="number" class="grow" placeholder="Enter in USD"
+                               th:value="${invoice != null ? invoice.amount : ''}" />
+                    </label>
+                </div>
+                <div th:replace="~{fragments/formErrors :: fieldErrors('amount')}"></div>
+
+                <div class="form-control w-full gap-2">
+                    <span class="label-text">Due Date</span>
+                    <label for="dueDate" class="input input-bordered flex items-center gap-2">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input id="dueDate" name="dueDate" type="text" class="grow" placeholder="4/5/2024"
+                               th:value="${invoice != null ? invoice.dueDate : ''}" />
+                    </label>
+                </div>
+                <div th:replace="~{fragments/formErrors :: fieldErrors('dueDate')}"></div>
+
+                <div class="form-control w-full gap-2">
+                    <span class="label-text">Status</span>
+                    <div class="input input-bordered flex items-center gap-2">
+                        <div class="flex gap-4">
+                            <div class="flex items-center">
+                                <input type="radio" name="status" id="pending" class="radio" value="pending"
+                                       th:checked="${invoice != null and invoice.status == 'pending'}" />
+                                <label for="pending" class="ml-2 badge badge-sm badge-ghost p-3 gap-3">Pending
+                                    <i class="fa-regular fa-clock"></i></label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="radio" name="status" id="paid" class="radio" value="paid"
+                                       th:checked="${invoice != null and invoice.status == 'paid'}" />
+                                <label for="paid" class="ml-2 badge badge-sm badge-success p-3 gap-3 text-white">Paid
+                                    <i class="fa-regular fa-circle-check"></i></label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div th:replace="~{fragments/formErrors :: fieldErrors('status')}"></div>
+
+                <div class="mt-6 flex justify-end gap-4">
+                    <a class="btn btn-ghost" th:href="@{/dashboard/invoices}">Cancel</a>
+                    <button type="submit" class="btn btn-primary" th:text="${title}"></button>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

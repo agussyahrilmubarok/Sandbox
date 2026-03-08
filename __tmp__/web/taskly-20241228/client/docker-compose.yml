@@ -1,0 +1,15 @@
+services:
+  react-app:
+    container_name: taskly-app # Name of the container
+    build:
+      context: . # Build from the current directory
+      dockerfile: Dockerfile # Use the Dockerfile in the current directory
+    ports:
+      - "3000:3000" # Map port 5173 on the host to port 5173 in the container
+    env_file:
+      - .env # Load environment variables from the .env file
+    volumes:
+      - .:/app # Mount the current directory for hot reload (development only)
+      - /app/node_modules # Exclude node_modules from being overwritten
+    stdin_open: true
+    tty: true

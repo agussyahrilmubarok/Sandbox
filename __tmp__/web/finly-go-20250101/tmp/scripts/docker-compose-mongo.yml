@@ -1,0 +1,25 @@
+services:
+  mongodb:
+    container_name: finly-mongodb
+    image: mongo:4.4
+    restart: on-failure
+    environment:
+      - MONGO_INITDB_DATABASE=finly
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=securepassword123
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo/init-db.js:/docker-entrypoint-initdb.d/init-db.js
+
+  mongo-express:
+    container_name: finly-mongo-express
+    image: mongo-express:latest
+    restart: on-failure
+    depends_on:
+      - mongodb
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:securepassword123@mongodb:27017/
+      - ME_CONFIG_BASICAUTH=false
+    ports:
+      - 8081:8081

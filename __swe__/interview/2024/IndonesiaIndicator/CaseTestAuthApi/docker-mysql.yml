@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  mysql:
+    container_name: demo-mysql
+    image: mysql:8.1.0
+    restart: on-failure
+    environment:
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+      MYSQL_DATABASE: demo
+      MYSQL_USER: developer
+      MYSQL_PASSWORD: my-secret-pw
+    ports:
+      - '3306:3306'
+    volumes:
+      - data:/var/lib/mysql
+
+volumes:
+  data:
+    driver: local

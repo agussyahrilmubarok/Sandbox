@@ -1,0 +1,39 @@
+services:
+  mongodb:
+    container_name: taskly-mongodb
+    image: mongo:4.4
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=taskly
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=securepassword123
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo/init-db.js:/docker-entrypoint-initdb.d/init-db.js
+    networks:
+      - taskly-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-express:
+    container_name: taskly-mongo-express
+    image: mongo-express:latest
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:securepassword123@mongodb:27017/
+      - ME_CONFIG_BASICAUTH=false
+    ports:
+      - 8081:8081
+    networks:
+      - taskly-network
+
+networks:
+  taskly-network:
+    driver: bridge

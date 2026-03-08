@@ -1,0 +1,11 @@
+services:
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2.2
+    container_name: phpmyadmin
+    restart: on-failure
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "80:80"

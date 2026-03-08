@@ -1,0 +1,31 @@
+server:
+  shutdown: graceful
+  port: 1133
+
+spring:
+  application:
+    name: flighthub
+  config:
+    import: optional:file:.env[.properties]
+  data:
+    mongodb:
+      host: ${MONGO_DB_HOST:localhost}
+      port: ${MONGO_DB_PORT:27017}
+      database: ${MONGO_DB_NAME:flighhub_db}
+
+springdoc:
+  api-docs:
+    enabled: true
+  show-actuator: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+          - "*"
+          - prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true

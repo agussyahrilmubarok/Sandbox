@@ -1,0 +1,48 @@
+services:
+  mongo:
+    container_name: mongo_db
+    image: bitnami/mongodb:4.4
+    restart: on-failure
+    environment:
+      MONGODB_ROOT_USER: admin
+      MONGODB_ROOT_PASSWORD: my-secret-pw
+      MONGODB_DATABASE: mydatabase
+      MONGODB_USERNAME: dev
+      MONGODB_PASSWORD: my-secret-pw
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/bitnami/mongodb
+
+  backend:
+    container_name: backend
+    build: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      - APP_NAME=server
+      - APP_PORT=3001
+      - APP_ENV=development
+      - MONGODB_URI=mongodb://dev:my-secret-pw@mongo:27017/mydatabase?authSource=mydatabase
+      - JWT_SECRET=supersecretkey
+      - CLIENT_URL=http://localhost:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongo
+  
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    env_file:
+      - ./frontend/.env
+    environment:
+      - VITE_PORT=3000
+      - VITE_BACKEND_URL=http://backend:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+      
+volumes:
+  mongo_data:

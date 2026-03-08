@@ -1,0 +1,12 @@
+curl -X POST http://localhost:8080/api/v1/flights/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "from": "CGK",
+    "to": "DPS",
+    "date": "2025-07-12",
+    "passengers": 2
+  }'
+
+curl -X GET http://localhost:8080/api/v1/flights/search/0d378ce3-8afb-44bf-9b2c-79363eb0324f/stream
+
+curl -N -v http://localhost:8080/api/v1/flights/search/0d378ce3-8afb-44bf-9b2c-79363eb0324f/stream

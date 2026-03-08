@@ -1,0 +1,25 @@
+APPLICATION:
+  NAME: forum-api
+  PORT: 8080
+
+LOG:
+  LEVEL: 6
+
+POSTGRES:
+  HOST: localhost
+  PORT: 5432
+  USER: forum
+  PASSWORD: my-secret-pw
+  NAME: forum
+  SSL_MODE: disable
+  MAX_OPEN_CONNS: 25
+  MAX_IDLE_CONNS: 25
+  MAX_IDLE_TIME: 15m
+
+JWT:
+  SECRET: default_secret_key
+  EXPIRATION: 24h
+
+WEB:
+  PREFORK: false
+  PORT: 3000
