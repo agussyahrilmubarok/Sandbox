@@ -1,0 +1,69 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Environment variables
+.env
+.env.*.local
+
+# Build outputs
+dist/
+build/
+.out/
+.next/
+
+# Debug files
+*.swp
+*.swo
+*.sln
+
+# IDE-specific files
+.idea/
+.vscode/
+*.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# npm-related files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Coverage reports
+coverage/
+
+# Miscellaneous
+*.bak
+*.tmp
+*.seed
+*.log
+*.pid
+*.pid.lock
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tgz
+*.gz
+*.zip
+*.tar
+*.rar
+
+# Optional npm cache directory
+.npm/
+
+# Ignore public or private keys
+*.pem
+*.key
+*.crt
+*.cert

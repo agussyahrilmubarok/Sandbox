@@ -1,0 +1,18 @@
+services:
+  mongo:
+    container_name: mongo_db
+    image: bitnami/mongodb:4.4
+    restart: on-failure
+    environment:
+      MONGODB_ROOT_USER: admin
+      MONGODB_ROOT_PASSWORD: my-secret-pw
+      MONGODB_DATABASE: mydatabase
+      MONGODB_USERNAME: dev
+      MONGODB_PASSWORD: my-secret-pw
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/bitnami/mongodb
+
+volumes:
+  mongo_data:

@@ -1,0 +1,12 @@
+template: testify
+packages:
+    example.com/booking/internal/booking:
+        config:
+            dir: "{{.InterfaceDir}}"
+            filename: "mock_test.go"
+            pkgname: "booking_test"
+            structname: "Mock{{.InterfaceName}}"
+        interfaces:
+            IStore:
+            IService:
+            IClient:

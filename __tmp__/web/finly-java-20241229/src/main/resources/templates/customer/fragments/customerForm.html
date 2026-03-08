@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="customerForm">
+
+    <h1 class="mb-4 text-xl md:text-2xl" th:text="${title}"></h1>
+
+    <form method="POST"
+          th:action="${title == 'Create Customer' ? '/dashboard/customers' : '/dashboard/customers/' + customer.id}"
+          th:object="${customer}">
+
+        <div class="rounded-md bg-slate-100 p-4 md:p-6">
+            <div class="flex flex-col gap-4">
+
+                <div class="form-control w-full gap-2">
+                    <span class="label-text">Customer Name</span>
+                    <label for="name" class="input input-bordered flex items-center gap-2">
+                        <i class="fa-regular fa-user"></i>
+                        <input class="grow" id="id" name="id" th:value="${customer != null ? customer.id : ''}"
+                               type="hidden"/>
+                        <input id="name" name="name" type="text" class="grow" placeholder="John Doe" th:value="${customer != null ? customer.name : ''}" />
+                    </label>
+                    <div th:replace="~{fragments/formErrors :: fieldErrors('name')}"></div>
+                </div>
+
+                <div class="form-control w-full gap-2">
+                    <span class="label-text">Email</span>
+                    <label for="email" class="input input-bordered flex items-center gap-2">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input id="email" name="email" type="email" class="grow" placeholder="user@mail.com" th:value="${customer != null ? customer.email : ''}" />
+                    </label>
+                    <div th:replace="~{fragments/formErrors :: fieldErrors('email')}"></div>
+                </div>
+
+                <div class="form-control w-full gap-2">
+                    <span class="label-text">Phone</span>
+                    <label for="phone" class="input input-bordered flex items-center gap-2">
+                        <i class="fa-solid fa-phone"></i>
+                        <input id="phone" name="phone" type="tel" class="grow" placeholder="+1223456" th:value="${customer != null ? customer.phone : ''}" />
+                    </label>
+                    <div th:replace="~{fragments/formErrors :: fieldErrors('phone')}"></div>
+                </div>
+
+                <div class="form-control w-full gap-2">
+                    <span class="label-text">Address</span>
+                    <label for="address" class="input input-bordered flex items-center gap-2">
+                        <i class="fa-regular fa-address-card"></i>
+                        <input id="address" name="address" type="text" class="grow" placeholder="1 West Pearce St, Richmond Hill, ON L4B 3K3, Canada" th:value="${customer != null ? customer.address : ''}" />
+                    </label>
+                    <div th:replace="~{fragments/formErrors :: fieldErrors('address')}"></div>
+                </div>
+
+            </div>
+
+            <div class="mt-6 flex justify-end gap-4">
+                <a class="btn btn-ghost" th:href="@{/dashboard/customers}">Cancel</a>
+                <button type="submit" class="btn btn-primary" th:text="${title}"></button>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_NAME:spring}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:password}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+springdoc:
+  api-docs:
+    enabled: true
+jwt:
+  secretKey: ${JWT_SECRET:7B3A6035805880DEACAC4525ACB5C8807B3A6035805880DEACAC4525ACB5C880}
+  expireInMs: ${JWT_EXPIRE_MS:6000000} # 1 Hour
+#  expireInMs: 60000 # 1 Minute

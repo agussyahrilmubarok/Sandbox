@@ -1,0 +1,28 @@
+spring:
+  config:
+    import:
+  datasource:
+    name: mysql
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:my-secret-pw}
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_NAME:demo}
+    maximum-pool-size: 5
+    connection-timeout: 180000
+    maximum-lifetime: 170000
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  sql:
+    init:
+      mode: always
+springdoc:
+  api-docs:
+    enabled: true
+jwt:
+  secretKey: ${JWT_SECRET:7B3A6035805880DEACAC4525ACB5C8807B3A6035805880DEACAC4525ACB5C880}
+  expireInMs: ${JWT_EXPIRE_MS:6000000} # 1 Hour

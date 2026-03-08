@@ -1,0 +1,365 @@
+{
+	"info": {
+		"_postman_id": "dc163949-4dba-4a2a-92d9-cfdcd11b40fd",
+		"name": "TASKLY_APP",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38650050"
+	},
+	"item": [
+		{
+			"name": "AUTH",
+			"item": [
+				{
+					"name": "SIGN_UP",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoe1\",\n    \"email\": \"johndoe1@mail.com\",\n    \"password\": \"P@ssword123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/auth/signup",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "SIGN_IN",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"johndoe123@mail.com\",\n    \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/auth/signin",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"auth",
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "SIGN_OUT",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/auth/signout",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"auth",
+								"signout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "USERS",
+			"item": [
+				{
+					"name": "GET_ALL",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/users",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET_BY_ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/users/67553c6776ddd71b61bedc10",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"users",
+								"67553c6776ddd71b61bedc10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "UPDATE_BY_ID",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"johndoe123\",\n    \"email\": \"johndoe123@mail.com\",\n    \"password\": \"password123\",\n    \"avatar\": \"default-avatar.jpg\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/users/update/67553c6776ddd71b61bedc10",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"users",
+								"update",
+								"67553c6776ddd71b61bedc10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "UPLOAD_AVATAR",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": "/home/mrsch/Downloads/images.jpeg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/users/upload/67553c6776ddd71b61bedc10",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"users",
+								"upload",
+								"67553c6776ddd71b61bedc10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE_BY_ID",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/users/delete/67553872ed23daf2edc6d9bc",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"users",
+								"delete",
+								"67553872ed23daf2edc6d9bc"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "TASKS",
+			"item": [
+				{
+					"name": "CREATE",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Read Atomic Habits\",\n    \"description\": \"Finish reading Atomic Habits by James Clear\",\n    \"priority\": \"not urgent\",\n    \"due\": \"2024-12-08T10:00:00Z\",\n    \"status\": \"open\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/tasks/create",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"tasks",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "UPDATE",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Read Atomic Habits - Updated\",\n  \"description\": \"Finish reading Atomic Habits by James Clear and take notes.\",\n  \"priority\": \"urgent\",\n  \"due\": \"2024-12-15T10:00:00Z\",\n  \"status\": \"in-progress\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/tasks/67557e1dea9a51db93688564",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"tasks",
+								"67557e1dea9a51db93688564"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/tasks/67557e1dea9a51db93688564",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"tasks",
+								"67557e1dea9a51db93688564"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET_OWN_TASKS",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/tasks/user/67557adc5671540434e887e8",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"tasks",
+								"user",
+								"67557adc5671540434e887e8"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}{{ENDPOINT_V1}}/tasks/67557e1dea9a51db93688564",
+							"host": [
+								"{{BASE_URL}}{{ENDPOINT_V1}}"
+							],
+							"path": [
+								"tasks",
+								"67557e1dea9a51db93688564"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "GET",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}",
+					"host": [
+						"{{BASE_URL}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "ENDPOINT_V1",
+			"value": "/api/v1",
+			"type": "string"
+		}
+	]
+}

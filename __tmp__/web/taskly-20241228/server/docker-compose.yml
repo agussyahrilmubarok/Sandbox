@@ -1,0 +1,32 @@
+services:
+  taskly-api:
+    container_name: taskly-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000" # Map host port 8000 to container port 8000
+    env_file:
+      - .env # Load environment variables from .env file
+    volumes:
+      - .:/app # Mount project directory for hot reload (development only)
+      - /app/node_modules # Exclude node_modules from being overwritten
+    stdin_open: true
+    tty: true
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

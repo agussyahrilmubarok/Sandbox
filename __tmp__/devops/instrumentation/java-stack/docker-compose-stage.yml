@@ -1,0 +1,196 @@
+services:
+  postgres:
+    image: postgres:17.6
+    container_name: postgres
+    restart: on-failure
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: my-secret-pw
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./scripts/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - instrument_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+  
+  consul:
+    container_name: consul
+    image: hashicorp/consul:1.9.9
+    restart: unless-stopped
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    networks:
+      - instrument_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8500/v1/status/leader"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+      start_period: 10s
+
+  member-app:
+    build: 
+      context: ./app/member
+    image: instgo-member-app:1.0.0
+    container_name: member-app
+    restart: on-failure
+    ports:
+      - "8081:8081"
+      - "7071:7071"
+    volumes:
+      - ./centralized-logging/member-app:/app/logs
+    networks:
+      - instrument_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+  
+  course-app:
+    build: 
+      context: ./app/course
+    image: instgo-course-app:1.0.0
+    container_name: course-app
+    restart: on-failure
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./centralized-logging/course-app:/app/logs
+    networks:
+      - instrument_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  booking-app:
+    build: 
+      context: ./app/booking
+    image: instgo-booking-app:1.0.0
+    container_name: booking-app
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./centralized-logging/booking-app:/app/logs
+    networks:
+      - instrument_net
+    depends_on:
+      postgres:
+        condition: service_healthy   
+  
+  grafana:
+    image: grafana/grafana:12.2
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./scripts/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    networks:
+      - instrument_net
+    depends_on:
+      - loki
+      - prometheus
+      - jaeger
+  
+  loki:
+    image: grafana/loki:3.5.7
+    container_name: loki
+    restart: on-failure
+    command: -config.file=/etc/loki/config.yaml
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./scripts/loki:/etc/loki
+    networks:
+      - instrument_net
+    depends_on:
+      - member-app
+      - course-app
+      - booking-app
+  
+  fluentbit:
+    image: fluent/fluent-bit:4.0
+    container_name: fluentbit
+    restart: on-failure
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./scripts/fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./scripts/fluentbit/map.json:/fluent-bit/etc/map.json
+      - ./centralized-logging:/app/centralized-logging
+    networks:
+      - instrument_net
+    depends_on:
+      - loki
+  
+  prometheus:
+    image: prom/prometheus:v3.7.2
+    container_name: prometheus
+    restart: on-failure
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.listen-address=:9090'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./scripts/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - instrument_net
+    depends_on:
+      - member-app
+      - course-app
+      - booking-app
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.74.0
+    container_name: jaeger
+    restart: always
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: 9411
+    expose:
+      - "16686"
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # Jaeger collector (HTTP)
+      - "14250:14250"  # gRPC (optional)
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+      - "9411:9411"    # Zipkin compatible
+    command:
+      - "--memory.max-traces=10000"
+      - "--collector.otlp.enabled=true"
+      - "--collector.otlp.grpc.host-port=:4317"
+      - "--collector.otlp.http.host-port=:4318"
+    networks:
+      - instrument_net
+    depends_on:
+      - member-app
+      - course-app
+      - booking-app
+
+volumes:
+  postgres_data:
+  grafana_data:
+  prometheus_data:
+
+networks:
+  instrument_net:
+    driver: bridge

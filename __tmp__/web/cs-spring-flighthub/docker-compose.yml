@@ -1,0 +1,75 @@
+services:
+  mongo:
+    image: "mongo:4.4"
+    container_name: mongo-container
+    restart: on-failure
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_container:/data/db
+    networks:
+      - flighthub_network
+
+  flighthub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flighthub:latest
+    container_name: flighthub
+    restart: on-failure
+    ports:
+      - "1133:1133"
+    environment:
+      - server.port=1133
+      - spring.data.mongodb.host=mongo
+      - spring.data.mongodb.port=27017
+      - spring.data.mongodb.database=flighhub_db
+    volumes:
+      - flighthub_data:/app/data
+    depends_on:
+      - mongo
+    networks:
+      - flighthub_network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-container
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./scripts/prometheus:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=5m'
+      - '--storage.tsdb.retention.size=10GB'
+    extra_hosts:
+      - "host.docker.internal:host-gateway" 
+    networks:
+      - flighthub_network
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana-container
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_DOMAIN=localhost
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./scripts/grafana/provisioning:/etc/grafana/provisioning
+      - ./scripts/grafana/dashboards:/etc/grafana/demo-dashboards
+      - grafana_data:/var/lib/grafana
+    networks:
+      - flighthub_network
+
+volumes:
+  mongodb_data_container:
+  flighthub_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  flighthub_network:

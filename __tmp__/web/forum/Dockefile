@@ -1,0 +1,38 @@
+# Stage 1: Build the Go application
+FROM golang:1.23.1-alpine3.20 AS builder
+
+# Set environment variables
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy go.mod and go.sum files to the working directory
+COPY go.mod go.sum ./
+
+# Download Go module dependencies
+RUN go mod download
+
+# Copy the rest of the source code to the working directory
+COPY . .
+
+# Build the Go application
+RUN go build -o bin/app cmd/app/main.go
+
+# Stage 2: Create a smaller container with only the necessary files
+FROM alpine:latest
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the built binary from the builder stage
+COPY --from=builder /app/bin/app .
+
+# Expose the port your application runs on
+EXPOSE 8080
+
+# Run the Go application
+CMD ["./app"]

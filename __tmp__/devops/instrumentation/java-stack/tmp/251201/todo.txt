@@ -1,0 +1,4 @@
+- build app images for docker 
+- fetch logs from apps in centralized logging
+- add metrics
+- see trace id from otel in jaeger

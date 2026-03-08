@@ -1,0 +1,24 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@inertiajs/vue3": "^1.0.0",
+        "@tailwindcss/forms": "^0.5.3",
+        "@vitejs/plugin-vue": "^5.0.0",
+        "axios": "^1.7.2",
+        "laravel-vite-plugin": "^1.0",
+        "vite": "^5.0",
+        "vue": "^3.4.0"
+    },
+    "dependencies": {
+        "canvas": "^2.11.2",
+        "jsbarcode": "^3.11.6",
+        "vue-chart-3": "^3.1.8",
+        "vue-multiselect": "^3.0.0",
+        "vue-sweetalert2": "^5.0.11"
+    }
+}

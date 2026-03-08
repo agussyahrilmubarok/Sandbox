@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Plus Shape</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #matrix-container {
+            font-family: monospace;
+            flex: 1;
+        }
+
+        #coordinates {
+            margin-left: 20px;
+            flex: 1;
+        }
+
+        span {
+            padding: 2px;
+        }
+    </style>
+</head>
+<body>
+<div id="matrix-container">
+    <span th:each="row : ${matrix}">
+        <span th:each="cell : ${row}">
+            <span th:text="${cell == '2' ? '*' : cell}"></span>
+        </span>
+        <br/>
+    </span>
+</div>
+<div id="coordinates">
+    <h3>Jawaban:</h3>
+    <ul>
+        <li th:each="coord : ${plusCoordinates}">
+            <span th:text="|(${coord[0]}, ${coord[1]})|"></span>
+        </li>
+    </ul>
+</div>
+</body>
+</html>

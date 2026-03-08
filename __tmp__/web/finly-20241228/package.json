@@ -1,0 +1,55 @@
+{
+  "name": "finly-js",
+  "version": "2.0.0",
+  "description": "Invoicing Web Application",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seeder": "node src/seeder.js",
+    "css": "postcss public/styles/tailwind.css -o public/styles/style.css",
+    "devcss": "postcss public/styles/tailwind.css -o public/styles/style.css -w",
+    "format": "prettier --write 'src/**/*.{js,ts,json}'",
+    "pm2:start": "pm2-runtime start src/ecosystem.config.js",
+    "pm2:log": "pm2 logs",
+    "pm2:stop": "pm2 stop src/ecosystem.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/mzs-house/finly-js"
+  },
+  "keywords": [
+    "Example",
+    "JavaScript",
+    "Express",
+    "EJS",
+    "MongoDB"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "connect-flash": "^0.1.1",
+    "daisyui": "^4.12.22",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.0",
+    "mongoose": "^8.9.1",
+    "morgan": "^1.10.0",
+    "pm2": "^5.4.3",
+    "uuid": "^11.0.3",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "nodemon": "^3.1.9",
+    "postcss": "^8.4.49",
+    "postcss-cli": "^11.0.0",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^3.4.17"
+  }
+}
