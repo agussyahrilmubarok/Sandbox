@@ -1,1 +1,0 @@
-GREENLIGHT_DB_DSN=postgres://greenlight:my-secret-pw@localhost/greenlight?sslmode=disable ./migrater

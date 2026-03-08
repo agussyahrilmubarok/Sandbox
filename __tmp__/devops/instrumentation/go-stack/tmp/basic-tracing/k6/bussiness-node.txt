@@ -1,5 +1,0 @@
-// available member. Code:"MC-1XX","MC-2XX",
-// not available member. Code:"MC-3XX",
-// available start_date, end_date and seat. Code:"C-001",
-// available start_date, end_date, but not seat. Code:"C-002",
-// not available start_date, end_date, but available seat. Code: "C-004",
